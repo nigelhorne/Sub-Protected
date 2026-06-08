@@ -1,0 +1,203 @@
+Sub::Protected — Design Document
+
+Purpose
+
+A Perl module that enforces "protected" access on subroutines: callable from within the defining package and its subclasses, but not from arbitrary external callers. Croaks with a descriptive message on violation. Ships a bypass mechanism for white-box testing.
+
+---
+Semantics (what "protected" means)
+
+A protected sub _foo in package Foo may be called only when (caller's package) eq 'Foo' or (caller's package)->isa('Foo'). All other callers get a croak. This is the Java/C++ protected visibility, not private (which would exclude subclasses too).
+
+---
+API — two tiers, one module
+
+Tier 1: Attribute syntax (preferred)
+
+package Foo;
+use Sub::Protected;
+
+sub _helper :Protected {
+    ...
+}
+
+Implemented via Attribute::Handlers. At compile time the attribute wrapper replaces the sub with a closure that checks the caller before delegating to the original body.
+
+Tier 2: Declarative import (fallback for perls where attributes are inconvenient)
+
+use Sub::Protected qw(_helper _other);
+
+Walks the caller's stash at CHECK time and wraps the named subs. Named subs must already be defined (or defined later but the wrap happens at CHECK so they must be defined before CHECK fires — document this constraint).
+
+Both tiers produce identical runtime behaviour; the attribute form is recommended because it's co-located with the definition and works naturally with Exporter and Moo/Moose.
+
+---
+Bypass for testing
+
+Two independent mechanisms; both must be active for bypass to work (i.e., either one alone is sufficient — they are OR'd):
+
+1. $Sub::Protected::BYPASS — set to a true value to disable all checks globally. Tests do local $Sub::Protected::BYPASS = 1;.
+2. HARNESS_ACTIVE — if $ENV{HARNESS_ACTIVE} is set, checks are skipped. This is the Test::Harness/prove convention. Included because it's the zero-config option for test suites that don't explicitly opt in.
+
+Document that HARNESS_ACTIVE is a convenience shortcut and that $Sub::Protected::BYPASS is the more explicit, recommended form for new test code.
+
+---
+Stack-walking caller check
+
+Do not use a fixed frame offset. Instead walk the call stack until a non-Sub::Protected frame is found, then inspect that frame's package. This makes the check robust against:
+
+- SUPER:: calls
+- delegation via can()
+- Scalar::Util::weaken or other XS that may introduce extra frames
+- future internal refactors of Sub::Protected itself
+
+Algorithm:
+  i = 0
+  loop:
+    pkg = (caller(i))[0]
+    if pkg is undef: we hit the top of the stack — treat as external, croak
+    if pkg eq 'Sub::Protected': i++, next  # skip our own frames
+    # pkg is the real caller
+    if pkg eq $owner_pkg or pkg->isa($owner_pkg): return (allowed)
+    croak
+
+$owner_pkg is the package in which the protected sub was defined, captured at wrap time (not at call time).
+
+---
+Error message format
+
+_helper() is a protected method of Foo and cannot be called from Bar
+
+Fields:
+- sub name — short name only (no package prefix), from the wrapped sub's metadata captured at wrap time
+- owner package — $owner_pkg
+- calling package — the package identified by the stack walk
+
+Use Carp::croak so the error points at the external caller's line, not inside Sub::Protected.
+
+---
+Implementation sketch
+
+Sub::Protected
+  import()
+    - If no args: install the :Protected attribute handler in caller's package via Attribute::Handlers
+    - If args (list of sub names): schedule wrapping at CHECK time
+
+  _wrap($owner_pkg, $sub_name, $coderef)
+    - Returns a new closure:
+        sub {
+            Sub::Protected::_check_access($owner_pkg, $sub_name);
+            goto &$coderef;   # preserve caller(), @_, prototype
+        }
+    - Uses goto &$coderef so the wrapped sub is invisible in the call stack
+      (important: the stack walk must NOT skip goto-ed frames; test this)
+
+  _check_access($owner_pkg, $sub_name)
+    - Return immediately if $Sub::Protected::BYPASS or $ENV{HARNESS_ACTIVE}
+    - Walk caller frames (skip Sub::Protected frames)
+    - Croak if caller pkg is neither $owner_pkg nor a subclass
+
+  PROTECTED_ATTR handler (via Attribute::Handlers)
+    - Receives ($package, $symbol, $referent, $attr, $data, $phase)
+    - Replaces *{$symbol}{CODE} with _wrap($package, subname, $referent)
+
+Use goto &$coderef rather than $coderef->(@_) so the wrapped frame does not appear in caller() chains inside the protected sub — otherwise anything inside _helper that calls caller(0) will see the wrapper closure instead of its real caller. Verify this with a test.
+
+---
+goto and stack-walk interaction
+
+goto &$coderef removes the wrapper frame from the call stack before executing $coderef. This means:
+
+- Inside the protected sub body, caller(0) correctly sees the external caller (or Sub::Protected::_check_access — but that frame is gone too after goto). This is the right behaviour.
+- The stack walk in _check_access runs before the goto, so it sees the full stack including the wrapper. It must skip Sub::Protected::* frames. Test that the skip logic handles _check_access, _wrap's closure, and import frames.
+
+---
+Attribute::Handlers phase
+
+Use RAWTIME => 1 (or BEGIN phase) where possible. If Attribute::Handlers phase is CHECK, subs must be defined before CHECK. Document: define protected subs before any CHECK-time code. For Moo/Moose, the attribute fires after the accessor generator, which is fine.
+
+---
+Subclass edge cases
+
+Calling SUPER:: from a subclass
+
+package Bar;
+our @ISA = ('Foo');
+sub _helper {
+    my $self = shift;
+    $self->SUPER::_helper(@_);   # should be allowed
+}
+
+When SUPER::_helper is called, the real caller is Bar::_helper. Stack walk finds Bar, which ->isa('Foo') is true. Allowed. ✓
+
+Cross-package call within the owner
+
+package Foo;
+sub public_method {
+    _helper(shift);   # bare call, same package
+}
+
+Stack finds Foo. Allowed. ✓
+
+Anonymous sub in external package
+
+my $cb = sub { $obj->_helper() };
+$cb->();
+
+Stack finds main (or wherever the sub {} was compiled). Blocked. ✓
+
+---
+What Sub::Protected does NOT do
+
+- Does not enforce at compile time (that would require a Perl parser extension). This is a runtime check.
+- Does not protect against can() + direct invocation of the unwrapped coderef obtained before wrapping. Document: wrap at use time, before any code stores a reference to the raw coderef. The attribute form naturally handles this since use happens at compile time.
+- Does not interoperate with Moo/Moose method modifiers that wrap the protected sub after Sub::Protected has already wrapped it. Document the constraint: apply Sub::Protected after any Moo/Moose method modifiers, or use the declarative import form in a CHECK block after the class is fully built.
+
+---
+Dependencies
+
+- Carp (core)
+- Scalar::Util (core)
+- Attribute::Handlers (core since 5.8)
+
+No non-core dependencies required for the runtime check. Test::Most + Test::Exception for the test suite.
+
+---
+Test plan (what the test suite must cover)
+
+1. Basic block: external package calling protected sub gets the exact croak message.
+2. Owner package calling protected sub: no croak.
+3. Subclass calling protected sub: no croak.
+4. SUPER:: call from subclass: no croak.
+5. $Sub::Protected::BYPASS = 1: no croak from any caller.
+6. $ENV{HARNESS_ACTIVE} set: no croak.
+7. local $Sub::Protected::BYPASS: restore after scope.
+8. Error message format: exact match on package names and sub name.
+9. caller() inside protected sub body returns the real external caller, not the wrapper (validates goto).
+10. Declarative import form (use Sub::Protected qw(...)) wraps correctly.
+11. Attribute form (sub foo :Protected) wraps correctly.
+12. Both forms produce identical caller-check behaviour.
+13. Deep call chain (A → B → protected_sub): blocked at the first non-owner frame.
+14. Subclass of a subclass: C->isa('Foo') via two hops — allowed.
+15. Unrelated package with same name prefix (FooBar vs Foo): FooBar->isa('Foo') is false — blocked.
+16. Anonymous sub as caller: blocked.
+17. Protected sub calling another protected sub in the same package: allowed.
+18. Two independently wrapped subs in the same package: each enforces independently.
+
+---
+Suggested module layout
+
+lib/Sub/Protected.pm        # core logic + Attribute::Handlers registration
+t/00-load.t
+t/basic.t                   # tests 1–5, 7–8
+t/bypass.t                  # tests 5–6
+t/caller_integrity.t        # test 9
+t/declarative.t             # test 10
+t/attribute.t               # test 11
+t/subclass.t                # tests 3–4, 14–15
+t/edge_cases.t              # tests 13, 16–18
+
+---
+Open question to resolve during implementation
+
+Attribute::Handlers can fire at BEGIN, CHECK, INIT, or UNITCHECK phase. The choice affects whether the attribute works inside eval STRING at runtime. Recommended default: CHECK. If you need runtime eval support (e.g. for Moo-generated accessors), you may need INIT instead. Write a test that does eval 'sub _foo :Protected { 1 }' and verify it either works or dies with a clear "define before CHECK" message rather than silently failing.
