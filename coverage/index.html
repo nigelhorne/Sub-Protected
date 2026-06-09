@@ -153,7 +153,7 @@
 
 <tbody>
 
-<tr class="high"><td><a href="blib-lib-Sub-Protected-pm.html" title="View coverage line by line" target="_blank">lib/Sub/Protected.pm</a> <a href="https://github.com/nigelhorne/Sub-Protected/blob/d74d628710b3195ace1aec7fb2dd467acec034a5/lib/Sub/Protected.pm" class="icon-link" title="View source on GitHub">&#128269;</a><canvas class="sparkline" width="80" height="20" data-points="97.7"></canvas></td><td>99.0</td><td>96.4</td><td>92.3</td><td>100.0</td><td><span class="coverage-badge badge-good" title="Excellent coverage">97.7%</span></td><td class="neutral" title="No previous data">&#9679;</td></tr>
+<tr class="high"><td><a href="blib-lib-Sub-Protected-pm.html" title="View coverage line by line" target="_blank">lib/Sub/Protected.pm</a> <a href="https://github.com/nigelhorne/Sub-Protected/blob/368c8ac8850a2b96063a5c009a17724320f20fb9/lib/Sub/Protected.pm" class="icon-link" title="View source on GitHub">&#128269;</a><canvas class="sparkline" width="80" height="20" data-points="97.7,97.7"></canvas></td><td>99.0</td><td>96.4</td><td>92.3</td><td>100.0</td><td><span class="coverage-badge badge-good" title="Excellent coverage">97.7%</span></td><td class="neutral" title="Previous (sparkline): 97.7%">&#9679; 0.0%</td></tr>
 <tr class="summary-row nosort"><td colspan="2"><strong>Summary</strong></td><td colspan="2">1 files</td><td colspan="3">Avg: 97%, Low: 0</td></tr>
 <tr class="high nosort"><td><strong>Total</strong></td><td>99.0</td><td>96.4</td><td>92.3</td><td>100.0</td><td colspan="2"><strong>97.7</strong></td></tr>
 </tbody></table>
@@ -202,7 +202,8 @@ function linearRegression(data) {
 }
 
 
-const dataPoints = [ { x: "2026-06-09T12:21:08+00:00", y: 97.7401129943503, delta: 0, url: "https://github.com/nigelhorne/Sub-Protected/commit/7a1bb942ad21046ec143594fba124adb63337610", label: "2026-06-09T12:21:08+00:00", pointBackgroundColor: "gray", comment: "Update mutation results (2026-06-09 c285a4d)" } ];
+const dataPoints = [ { x: "2026-06-09T12:21:08+00:00", y: 97.7401129943503, delta: 0, url: "https://github.com/nigelhorne/Sub-Protected/commit/7a1bb942ad21046ec143594fba124adb63337610", label: "2026-06-09T12:21:08+00:00", pointBackgroundColor: "gray", comment: "Update mutation results (2026-06-09 c285a4d)" },
+{ x: "2026-06-09T12:37:40+00:00", y: 97.7401129943503, delta: 0.0, url: "https://github.com/nigelhorne/Sub-Protected/commit/6f6e922012e2605b3f76aacaf722caa2e4809c49", label: "2026-06-09T12:37:40+00:00", pointBackgroundColor: "gray", comment: "Update mutation results (2026-06-09 d74d628)" } ];
 const regressionPoints = linearRegression(dataPoints);
 // Try to register the zoom plugin (handles different UMD builds)
 (function registerZoomPlugin(){
@@ -459,7 +460,7 @@ function refresh(){
 <ul>
 <li><b>Perl 5.36.x</b>: 2 failures</li>
 <li><b>linux</b>: 13 failures</li>
-<li><b>5.24 / linux</b>: 2 failures</li>
+<li><b>5.36 / linux</b>: 2 failures</li>
 </ul>
 <h3>Likely Root Causes</h3>
 <table class="root-causes">
@@ -572,32 +573,32 @@ document.addEventListener("DOMContentLoaded", () => {
 </thead>
 <tbody>
 
-<tr class="cpan-fail"><td>2026-06-09T09:08:00Z</td><td>linux</td><td>5.38.5</td><td>Slaven Rezi&#x107;</td><td></td>
-				<td><a href="https://www.cpantesters.org/cpan/report/ce5ae9ea-63e2-11f1-bd38-57396e8775ea" target="_blank">View</a></td></tr>
+<tr class="cpan-fail"><td>2026-06-09T10:32:00Z</td><td>linux</td><td>5.18.4</td><td>Andreas J. K&ouml;nig (ANDK)</td><td></td>
+				<td><a href="https://www.cpantesters.org/cpan/report/8e7f84dc-63ee-11f1-98e5-8e86d9fde880" target="_blank">View</a></td></tr>
 <tr class="cpan-fail"><td>2026-06-09T10:27:00Z</td><td>linux</td><td>5.34.1</td><td>Andreas J. K&ouml;nig (ANDK)</td><td></td>
 				<td><a href="https://www.cpantesters.org/cpan/report/dee4e972-63ed-11f1-a76a-835bd7b1ced9" target="_blank">View</a></td></tr>
+<tr class="cpan-fail"><td>2026-06-09T10:30:00Z</td><td>linux</td><td>5.24.0</td><td>Andreas J. K&ouml;nig (ANDK)</td><td></td>
+				<td><a href="https://www.cpantesters.org/cpan/report/46406272-63ee-11f1-bab2-bf0ebd3c20c4" target="_blank">View</a></td></tr>
+<tr class="cpan-fail"><td>2026-06-09T09:08:00Z</td><td>linux</td><td>5.38.5</td><td>Slaven Rezi&#x107;</td><td></td>
+				<td><a href="https://www.cpantesters.org/cpan/report/ce5ae9ea-63e2-11f1-bd38-57396e8775ea" target="_blank">View</a></td></tr>
+<tr class="cpan-fail"><td>2026-06-09T10:28:00Z</td><td>linux</td><td>5.32.1</td><td>Andreas J. K&ouml;nig (ANDK)</td><td></td>
+				<td><a href="https://www.cpantesters.org/cpan/report/f42328e4-63ed-11f1-8d8f-827e4e9ea9f6" target="_blank">View</a></td></tr>
+<tr class="cpan-fail"><td>2026-06-09T09:13:00Z</td><td>linux</td><td>5.36.3</td><td>Slaven Rezi&#x107;</td><td></td>
+				<td><a href="https://www.cpantesters.org/cpan/report/89f738c0-63e3-11f1-bd38-57396e8775ea" target="_blank">View</a></td></tr>
+<tr class="cpan-fail"><td>2026-06-09T10:25:00Z</td><td>linux</td><td>5.42.0</td><td>Andreas J. K&ouml;nig (ANDK)</td><td></td>
+				<td><a href="https://www.cpantesters.org/cpan/report/8421cb72-63ed-11f1-9511-c46fd1fdd7df" target="_blank">View</a></td></tr>
+<tr class="cpan-fail"><td>2026-06-09T10:30:00Z</td><td>linux</td><td>5.24.4</td><td>Andreas J. K&ouml;nig (ANDK)</td><td></td>
+				<td><a href="https://www.cpantesters.org/cpan/report/3f60214a-63ee-11f1-83b4-8e2d03b74efb" target="_blank">View</a></td></tr>
 <tr class="cpan-fail"><td>2026-06-09T10:27:00Z</td><td>linux</td><td>5.36.1</td><td>Andreas J. K&ouml;nig (ANDK)</td><td></td>
 				<td><a href="https://www.cpantesters.org/cpan/report/c14d7f6e-63ed-11f1-8372-8484800f745b" target="_blank">View</a></td></tr>
 <tr class="cpan-fail"><td>2026-06-09T09:12:00Z</td><td>linux</td><td>5.40.3</td><td>Slaven Rezi&#x107;</td><td></td>
 				<td><a href="https://www.cpantesters.org/cpan/report/58c2b428-63e3-11f1-bd38-57396e8775ea" target="_blank">View</a></td></tr>
-<tr class="cpan-fail"><td>2026-06-09T10:32:00Z</td><td>linux</td><td>5.18.4</td><td>Andreas J. K&ouml;nig (ANDK)</td><td></td>
-				<td><a href="https://www.cpantesters.org/cpan/report/8e7f84dc-63ee-11f1-98e5-8e86d9fde880" target="_blank">View</a></td></tr>
-<tr class="cpan-fail"><td>2026-06-09T10:30:00Z</td><td>linux</td><td>5.24.0</td><td>Andreas J. K&ouml;nig (ANDK)</td><td></td>
-				<td><a href="https://www.cpantesters.org/cpan/report/46406272-63ee-11f1-bab2-bf0ebd3c20c4" target="_blank">View</a></td></tr>
-<tr class="cpan-fail"><td>2026-06-09T10:30:00Z</td><td>linux</td><td>5.24.4</td><td>Andreas J. K&ouml;nig (ANDK)</td><td></td>
-				<td><a href="https://www.cpantesters.org/cpan/report/3f60214a-63ee-11f1-83b4-8e2d03b74efb" target="_blank">View</a></td></tr>
-<tr class="cpan-fail"><td>2026-06-09T10:25:00Z</td><td>linux</td><td>5.42.0</td><td>Andreas J. K&ouml;nig (ANDK)</td><td></td>
-				<td><a href="https://www.cpantesters.org/cpan/report/8421cb72-63ed-11f1-9511-c46fd1fdd7df" target="_blank">View</a></td></tr>
-<tr class="cpan-fail"><td>2026-06-09T10:31:00Z</td><td>linux</td><td>5.22.1</td><td>Andreas J. K&ouml;nig (ANDK)</td><td></td>
-				<td><a href="https://www.cpantesters.org/cpan/report/6aa53d22-63ee-11f1-bf20-a825c7ebe618" target="_blank">View</a></td></tr>
-<tr class="cpan-fail"><td>2026-06-09T10:28:00Z</td><td>linux</td><td>5.32.1</td><td>Andreas J. K&ouml;nig (ANDK)</td><td></td>
-				<td><a href="https://www.cpantesters.org/cpan/report/f42328e4-63ed-11f1-8d8f-827e4e9ea9f6" target="_blank">View</a></td></tr>
-<tr class="cpan-fail"><td>2026-06-09T10:24:00Z</td><td>linux</td><td>5.38.5</td><td>Andreas J. K&ouml;nig (ANDK)</td><td></td>
-				<td><a href="https://www.cpantesters.org/cpan/report/55e1688a-63ed-11f1-b598-80079e35f90a" target="_blank">View</a></td></tr>
 <tr class="cpan-fail"><td>2026-06-09T10:32:00Z</td><td>linux</td><td>5.20.2</td><td>Andreas J. K&ouml;nig (ANDK)</td><td></td>
 				<td><a href="https://www.cpantesters.org/cpan/report/7aae986c-63ee-11f1-aabc-acb36f63298e" target="_blank">View</a></td></tr>
-<tr class="cpan-fail"><td>2026-06-09T09:13:00Z</td><td>linux</td><td>5.36.3</td><td>Slaven Rezi&#x107;</td><td></td>
-				<td><a href="https://www.cpantesters.org/cpan/report/89f738c0-63e3-11f1-bd38-57396e8775ea" target="_blank">View</a></td></tr>
+<tr class="cpan-fail"><td>2026-06-09T10:24:00Z</td><td>linux</td><td>5.38.5</td><td>Andreas J. K&ouml;nig (ANDK)</td><td></td>
+				<td><a href="https://www.cpantesters.org/cpan/report/55e1688a-63ed-11f1-b598-80079e35f90a" target="_blank">View</a></td></tr>
+<tr class="cpan-fail"><td>2026-06-09T10:31:00Z</td><td>linux</td><td>5.22.1</td><td>Andreas J. K&ouml;nig (ANDK)</td><td></td>
+				<td><a href="https://www.cpantesters.org/cpan/report/6aa53d22-63ee-11f1-bf20-a825c7ebe618" target="_blank">View</a></td></tr>
 </tbody></table>
 <h2>Mutation Report</h2>
 <h3>Mutation Summary</h3>
@@ -617,7 +618,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 <tr><th>File</th><th>Total</th><th>Killed</th><th>Survivors</th><th>Skipped</th><th>Score%</th><th>Complexity</th><th title="TER1=Statement, TER2=Branch, TER3=LCSAJ Path">TER1 / TER2 / TER3</th></tr>
 
-<tr class="high"><td><a href="mutation_html/lib/Sub/Protected.pm.html" title="View mutation line by line" target="_blank">lib/Sub/Protected.pm</a> <a href="https://github.com/nigelhorne/Sub-Protected/blob/d74d628710b3195ace1aec7fb2dd467acec034a5/lib/Sub/Protected.pm" class="icon-link" title="View source on GitHub">&#128269;</a></td><td>3</td><td>3</td><td>0</td><td>0</td><td><span class="coverage-badge badge-good" title="Excellent">100.0%</span></td><td><span class="coverage-badge badge-good" title="Good">28</span></td><td><span class="coverage-badge badge-good" title="Excellent">99.0%</span> / <span class="coverage-badge badge-good" title="Excellent">96.4%</span> / <span class="coverage-badge badge-good" title="Excellent">100.0%</span></td></tr>
+<tr class="high"><td><a href="mutation_html/lib/Sub/Protected.pm.html" title="View mutation line by line" target="_blank">lib/Sub/Protected.pm</a> <a href="https://github.com/nigelhorne/Sub-Protected/blob/368c8ac8850a2b96063a5c009a17724320f20fb9/lib/Sub/Protected.pm" class="icon-link" title="View source on GitHub">&#128269;</a></td><td>3</td><td>3</td><td>0</td><td>0</td><td><span class="coverage-badge badge-good" title="Excellent">100.0%</span></td><td><span class="coverage-badge badge-good" title="Good">28</span></td><td><span class="coverage-badge badge-good" title="Excellent">99.0%</span> / <span class="coverage-badge badge-good" title="Excellent">96.4%</span> / <span class="coverage-badge badge-good" title="Excellent">100.0%</span></td></tr>
 </table>
 
 <h2>Structural Coverage (Approximate)</h2>
@@ -632,7 +633,7 @@ Tests execute 99.00% of the code and detect 100.00% of injected faults.
 </div>
 <footer>
 	<p>Project: <a href="https://github.com/nigelhorne/Sub-Protected">Sub-Protected</a></p>
-	<p><em>Last updated: 2026-06-09 12:34:49 - <a href="https://github.com/nigelhorne/Sub-Protected/commit/d74d628710b3195ace1aec7fb2dd467acec034a5">commit <code>d74d628</code></a></em></p>
+	<p><em>Last updated: 2026-06-09 12:53:30 - <a href="https://github.com/nigelhorne/Sub-Protected/commit/368c8ac8850a2b96063a5c009a17724320f20fb9">commit <code>368c8ac</code></a></em></p>
 	<p style="float: right; font-size: 0.85em; color: #999;">Powered by <a href="https://metacpan.org/dist/App-Test-Generator">App::Test::Generator 0.38</a></p>
 </footer>
 </body>
