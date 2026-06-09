@@ -802,92 +802,98 @@ Approximate LCSAJ segments: 29<br>
 </span><span class="">  510: 
 </span><span class="">  511: =head1 SEE ALSO
 </span><span class="">  512: 
-</span><span class="">  513: L&lt;Attribute::Handlers&gt;, L&lt;Carp&gt;, L&lt;Readonly&gt;, L&lt;Params::Get&gt;,
-</span><span class="">  514: L&lt;Params::Validate::Strict&gt;, L&lt;Return::Set&gt;.
-</span><span class="">  515: 
-</span><span class="">  516: =head2 FORMAL SPECIFICATION
-</span><span class="">  517: 
-</span><span class="">  518: =head3 import
-</span><span class="">  519: 
-</span><span class="">  520: The following Z-notation schemas formally specify the state and operations
-</span><span class="">  521: of Sub::Protected.  Unicode mathematical symbols are used in this section
-</span><span class="">  522: only.
+</span><span class="">  513: =over 4
+</span><span class="">  514: 
+</span><span class="">  515: =item * L&lt;Test Dashboard|https://nigelhorne.github.io/Sub-Protected/coverage/&gt;
+</span><span class="">  516: 
+</span><span class="">  517: =back
+</span><span class="">  518: 
+</span><span class="">  519: L&lt;Attribute::Handlers&gt;, L&lt;Carp&gt;, L&lt;Readonly&gt;, L&lt;Params::Get&gt;,
+</span><span class="">  520: L&lt;Params::Validate::Strict&gt;, L&lt;Return::Set&gt;.
+</span><span class="">  521: 
+</span><span class="">  522: =head2 FORMAL SPECIFICATION
 </span><span class="">  523: 
-</span><span class="">  524:     -- Type abbreviations
-</span><span class="">  525:     Package  == seq CHAR     -- a non-empty Perl package name string
-</span><span class="">  526:     SubName  == seq CHAR     -- a Perl identifier string
-</span><span class="">  527:     Proc     == seq CHAR     -- abstract: a callable code reference
-</span><span class="">  528: 
-</span><span class="">  529:     -- Ancestry relation (derived dynamically from @ISA chains)
-</span><span class="">  530:     anc : Package -&gt; P Package
-</span><span class="">  531:     forall p : Package .
-</span><span class="">  532:         anc p = {p} union bigcup { anc r | r in @ISA_of(p) }
-</span><span class="">  533: 
-</span><span class="">  534:     -- Protected-access predicate
-</span><span class="">  535:     permitted : Package x Package -&gt; BOOL
-</span><span class="">  536:     forall caller, owner : Package .
-</span><span class="">  537:         permitted(caller, owner) &lt;=&gt; owner in anc(caller)
-</span><span class="">  538: 
-</span><span class="">  539:     -- System state
-</span><span class="">  540:     +-Registry-------------------------------------------+
-</span><span class="">  541:     | protected : P (Package x SubName)                  |
-</span><span class="">  542:     | bypass    : BOOL                                   |
-</span><span class="">  543:     | config    : { harness_bypass : BOOL }              |
-</span><span class="">  544:     +----------------------------------------------------+
-</span><span class="">  545: 
-</span><span class="">  546:     -- Initial state
-</span><span class="">  547:     +-InitRegistry---------------------------------------+
-</span><span class="">  548:     | Registry                                           |
-</span><span class="">  549:     |----------------------------------------------------|
-</span><span class="">  550:     | protected = {}                                     |
-</span><span class="">  551:     | bypass    = false                                  |
-</span><span class="">  552:     | config    = { harness_bypass |-&gt; true }            |
-</span><span class="">  553:     +----------------------------------------------------+
-</span><span class="">  554: 
-</span><span class="">  555:     -- Wrap: add a sub to the protected registry
-</span><span class="">  556:     +-Wrap-----------------------------------------------+
-</span><span class="">  557:     | Delta-Registry                                     |
-</span><span class="">  558:     | pkg? : Package ; name? : SubName                   |
-</span><span class="">  559:     |----------------------------------------------------|
-</span><span class="">  560:     | protected&#39; = protected union { (pkg?, name?) }     |
-</span><span class="">  561:     | bypass&#39;    = bypass                                |
-</span><span class="">  562:     | config&#39;    = config                                |
-</span><span class="">  563:     +----------------------------------------------------+
-</span><span class="">  564: 
-</span><span class="">  565:     -- Bypass predicate
-</span><span class="">  566:     bypass_active(R) &lt;=&gt;
-</span><span class="">  567:         R.bypass or (R.config.harness_bypass and HARNESS_ACTIVE)
-</span><span class="">  568: 
-</span><span class="">  569:     -- Access check: no state change
-</span><span class="">  570:     +-CheckAccess----------------------------------------+
-</span><span class="">  571:     | Xi-Registry                                        |
-</span><span class="">  572:     | caller? : Package                                  |
-</span><span class="">  573:     | owner?  : Package                                  |
-</span><span class="">  574:     | name?   : SubName                                  |
-</span><span class="">  575:     | ok!     : BOOL                                     |
-</span><span class="">  576:     |----------------------------------------------------|
-</span><span class="">  577:     | (owner?, name?) in protected                       |
-</span><span class="">  578:     | ok! &lt;=&gt; bypass_active or permitted(caller?, owner?)|
-</span><span class="">  579:     +----------------------------------------------------+
-</span><span class="">  580: 
-</span><span class="">  581:     -- Violation (croak case):
-</span><span class="">  582:     --   not ok! =&gt;
-</span><span class="">  583:     --   croak(&quot;name?()&quot; ++ &quot; is a protected method of &quot; ++ owner?
-</span><span class="">  584:     --         ++ &quot; and cannot be called from &quot; ++ caller?)
-</span><span class="">  585: 
-</span><span class="">  586: =head1 AUTHOR
-</span><span class="">  587: 
-</span><span class="">  588: Nigel Horne, C&lt;&lt; &lt;njh at nigelhorne.com&gt; &gt;&gt;
-</span><span class="">  589: 
-</span><span class="">  590: =head1 LICENCE AND COPYRIGHT
+</span><span class="">  524: =head3 import
+</span><span class="">  525: 
+</span><span class="">  526: The following Z-notation schemas formally specify the state and operations
+</span><span class="">  527: of Sub::Protected.  Unicode mathematical symbols are used in this section
+</span><span class="">  528: only.
+</span><span class="">  529: 
+</span><span class="">  530:     -- Type abbreviations
+</span><span class="">  531:     Package  == seq CHAR     -- a non-empty Perl package name string
+</span><span class="">  532:     SubName  == seq CHAR     -- a Perl identifier string
+</span><span class="">  533:     Proc     == seq CHAR     -- abstract: a callable code reference
+</span><span class="">  534: 
+</span><span class="">  535:     -- Ancestry relation (derived dynamically from @ISA chains)
+</span><span class="">  536:     anc : Package -&gt; P Package
+</span><span class="">  537:     forall p : Package .
+</span><span class="">  538:         anc p = {p} union bigcup { anc r | r in @ISA_of(p) }
+</span><span class="">  539: 
+</span><span class="">  540:     -- Protected-access predicate
+</span><span class="">  541:     permitted : Package x Package -&gt; BOOL
+</span><span class="">  542:     forall caller, owner : Package .
+</span><span class="">  543:         permitted(caller, owner) &lt;=&gt; owner in anc(caller)
+</span><span class="">  544: 
+</span><span class="">  545:     -- System state
+</span><span class="">  546:     +-Registry-------------------------------------------+
+</span><span class="">  547:     | protected : P (Package x SubName)                  |
+</span><span class="">  548:     | bypass    : BOOL                                   |
+</span><span class="">  549:     | config    : { harness_bypass : BOOL }              |
+</span><span class="">  550:     +----------------------------------------------------+
+</span><span class="">  551: 
+</span><span class="">  552:     -- Initial state
+</span><span class="">  553:     +-InitRegistry---------------------------------------+
+</span><span class="">  554:     | Registry                                           |
+</span><span class="">  555:     |----------------------------------------------------|
+</span><span class="">  556:     | protected = {}                                     |
+</span><span class="">  557:     | bypass    = false                                  |
+</span><span class="">  558:     | config    = { harness_bypass |-&gt; true }            |
+</span><span class="">  559:     +----------------------------------------------------+
+</span><span class="">  560: 
+</span><span class="">  561:     -- Wrap: add a sub to the protected registry
+</span><span class="">  562:     +-Wrap-----------------------------------------------+
+</span><span class="">  563:     | Delta-Registry                                     |
+</span><span class="">  564:     | pkg? : Package ; name? : SubName                   |
+</span><span class="">  565:     |----------------------------------------------------|
+</span><span class="">  566:     | protected&#39; = protected union { (pkg?, name?) }     |
+</span><span class="">  567:     | bypass&#39;    = bypass                                |
+</span><span class="">  568:     | config&#39;    = config                                |
+</span><span class="">  569:     +----------------------------------------------------+
+</span><span class="">  570: 
+</span><span class="">  571:     -- Bypass predicate
+</span><span class="">  572:     bypass_active(R) &lt;=&gt;
+</span><span class="">  573:         R.bypass or (R.config.harness_bypass and HARNESS_ACTIVE)
+</span><span class="">  574: 
+</span><span class="">  575:     -- Access check: no state change
+</span><span class="">  576:     +-CheckAccess----------------------------------------+
+</span><span class="">  577:     | Xi-Registry                                        |
+</span><span class="">  578:     | caller? : Package                                  |
+</span><span class="">  579:     | owner?  : Package                                  |
+</span><span class="">  580:     | name?   : SubName                                  |
+</span><span class="">  581:     | ok!     : BOOL                                     |
+</span><span class="">  582:     |----------------------------------------------------|
+</span><span class="">  583:     | (owner?, name?) in protected                       |
+</span><span class="">  584:     | ok! &lt;=&gt; bypass_active or permitted(caller?, owner?)|
+</span><span class="">  585:     +----------------------------------------------------+
+</span><span class="">  586: 
+</span><span class="">  587:     -- Violation (croak case):
+</span><span class="">  588:     --   not ok! =&gt;
+</span><span class="">  589:     --   croak(&quot;name?()&quot; ++ &quot; is a protected method of &quot; ++ owner?
+</span><span class="">  590:     --         ++ &quot; and cannot be called from &quot; ++ caller?)
 </span><span class="">  591: 
-</span><span class="">  592: Copyright 2026 Nigel Horne.
+</span><span class="">  592: =head1 AUTHOR
 </span><span class="">  593: 
-</span><span class="">  594: Usage is subject to the GPL2 licence terms.
-</span><span class="">  595: If you use it,
-</span><span class="">  596: please let me know.
+</span><span class="">  594: Nigel Horne, C&lt;&lt; &lt;njh at nigelhorne.com&gt; &gt;&gt;
+</span><span class="">  595: 
+</span><span class="">  596: =head1 LICENCE AND COPYRIGHT
 </span><span class="">  597: 
-</span><span class="">  598: =cut
+</span><span class="">  598: Copyright 2026 Nigel Horne.
+</span><span class="">  599: 
+</span><span class="">  600: Usage is subject to the GPL2 licence terms.
+</span><span class="">  601: If you use it,
+</span><span class="">  602: please let me know.
+</span><span class="">  603: 
+</span><span class="">  604: =cut
 </span></pre>
 
 <script>
