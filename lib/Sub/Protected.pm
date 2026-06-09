@@ -297,9 +297,12 @@ sub import {
 		: ($args->{subs});
 
 	# Validate each name against the schema; validate_strict croaks on failure.
+	# Params::Validate::Strict silently accepts undef for type => 'string', so
+	# we coerce undef and references to '' so the regex check fires for them.
 	for my $sub_name (@names) {
-		eval { validate_strict(schema => $SUB_NAME_SCHEMA, input => { name => $sub_name }) };
-		croak "$SELF->import: '$sub_name' is not a valid Perl identifier"
+		my $check = (defined $sub_name && !ref $sub_name) ? $sub_name : q{};
+		eval { validate_strict(schema => $SUB_NAME_SCHEMA, input => { name => $check }) };
+		croak "$SELF->import: '$check' is not a valid Perl identifier"
 			if $@;
 	}
 
