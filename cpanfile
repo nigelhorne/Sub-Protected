@@ -14,6 +14,7 @@ on 'test' => sub {
 	requires 'Test::Exception';
 	requires 'Test::Mockingbird';
 	requires 'Test::Most';
+	requires 'Test::Returns';
 };
 
 on 'develop' => sub {

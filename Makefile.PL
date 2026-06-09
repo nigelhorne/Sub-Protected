@@ -31,6 +31,7 @@ WriteMakefile(
         'Test::Exception' => 0,
 	'Test::Mockingbird' => 0,
         'Test::Most'      => 0,
+	'Test::Returns' => 0,
     },
 	clean		=> { FILES => 'Sub-Protected-*' },
 	META_MERGE => {	# https://perldoc.perl.org/CPAN::Meta::Spec
