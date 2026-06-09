@@ -4,6 +4,7 @@ requires 'perl', '5.008';
 
 requires 'Attribute::Handlers';
 requires 'Carp';
+requires 'Readonly';
 
 on 'test' => sub {
 	requires 'IPC::System::Simple';
