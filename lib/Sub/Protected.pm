@@ -11,10 +11,10 @@ use Attribute::Handlers;
 use Readonly;
 use Scalar::Util      qw(blessed);
 use Params::Get       qw(get_params);
-use Params::Validate::Strict qw(validate_strict);
+use Params::Validate::Strict 0.33 qw(validate_strict);
 use Return::Set       qw(set_return);
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 # Public bypass flag.  Set to a true value to disable all access checks.
 # Use C<local $Sub::Protected::BYPASS = 1> in test code; see BYPASS section.
@@ -74,7 +74,7 @@ Sub::Protected - Enforce protected subroutine access (Java/C++ semantics)
 
 =head1 VERSION
 
-0.01
+0.02
 
 =head1 SYNOPSIS
 
@@ -589,7 +589,7 @@ Nigel Horne, C<< <njh at nigelhorne.com> >>
 
 =head1 LICENCE AND COPYRIGHT
 
-Copyright 2010-2026 Nigel Horne.
+Copyright 2026 Nigel Horne.
 
 Usage is subject to the GPL2 licence terms.
 If you use it,

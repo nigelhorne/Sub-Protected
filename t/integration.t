@@ -28,7 +28,7 @@ use Readonly;
 # -------------------------------------------------------------------
 
 Readonly::Scalar my $SP      => 'Sub::Protected';
-Readonly::Scalar my $VERSION => '0.01';
+Readonly::Scalar my $VERSION => '0.02';
 
 my %config = (
 	n_instances    => 5,       # number of concurrent objects in concurrency test
