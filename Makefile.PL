@@ -2,13 +2,23 @@ use strict;
 use warnings;
 use ExtUtils::MakeMaker;
 
+my $dist = {
+	COMPRESS => 'gzip -9f',	# Compress tarball using gzip
+	SUFFIX => 'gz',	# File suffix for tarball
+};
+
+if($^O eq 'darwin') {
+	$dist->{'TAR'} = 'gtar';
+}
+
 WriteMakefile(
     NAME             => 'Sub::Protected',
-    AUTHOR           => 'Nigel Horne <nigel.horne@gmail.com>',
+	AUTHOR		=> q{Nigel Horne <njh@nigelhorne.com>},
     VERSION_FROM     => 'lib/Sub/Protected.pm',
     ABSTRACT_FROM    => 'lib/Sub/Protected.pm',
-    LICENSE          => 'perl',
-    MIN_PERL_VERSION => '5.008',
+	((defined($ExtUtils::MakeMaker::VERSION) && ($ExtUtils::MakeMaker::VERSION >= 6.3002))
+		? ('LICENSE'=> 'GPL')
+		: ()),
     PREREQ_PM        => {
         'Attribute::Handlers' => 0,
         'Carp'                => 0,
@@ -17,13 +27,24 @@ WriteMakefile(
         'Test::Most'      => 0,
         'Test::Exception' => 0,
     },
-    META_MERGE => {
-        'meta-spec' => { version => 2 },
-        resources   => {
-            repository => {
-                type => 'git',
-                url  => 'https://github.com/njh/Sub-Protected.git',
-            },
-        },
-    },
+	clean		=> { FILES => 'Sub-Protected-*' },
+	META_MERGE => {	# https://perldoc.perl.org/CPAN::Meta::Spec
+		'meta-spec' => { version => 2 },
+		resources => {
+			homepage => 'https://metacpan.org/pod/Sub::Protected',
+			repository => {
+				type => 'git',
+				url => 'git://github.com/nigelhorne/Sub-Protected.git',
+				web => 'https://github.com/nigelhorne/Sub-Protected',
+				# license => 'http://dev.perl.org/licenses/',
+			}, bugtracker => {
+				web => 'https://rt.cpan.org/Public/Dist/Display.html?Name=Sub-Protected',
+				url => 'https://rt.cpan.org/Public/Dist/Display.html?Name=Sub-Protected',
+				# web => 'https://github.com/nigelhorne/Sub-Protected/issues',
+				# url => 'https://github.com/nigelhorne/Sub-Protected/issues',
+				mailto => 'bug-Sub-Protected@rt.cpan.org'
+			}
+		},
+	},
+	MIN_PERL_VERSION	=> '5.008'
 );
