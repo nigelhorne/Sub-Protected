@@ -28,8 +28,9 @@ WriteMakefile(
 	'Return::Set' => 0,
     }, TEST_REQUIRES    => {
 	'IPC::System::Simple' => 0,
-        'Test::Most'      => 0,
         'Test::Exception' => 0,
+	'Test::Mockingbird' => 0,
+        'Test::Most'      => 0,
     },
 	clean		=> { FILES => 'Sub-Protected-*' },
 	META_MERGE => {	# https://perldoc.perl.org/CPAN::Meta::Spec
