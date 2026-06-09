@@ -70,7 +70,7 @@ sub UNIVERSAL::Protected : ATTR(CODE,CHECK) {
 
 =head1 NAME
 
-Sub::Protected - enforce protected subroutine access (Java/C++ semantics)
+Sub::Protected - Enforce protected subroutine access (Java/C++ semantics)
 
 =head1 VERSION
 

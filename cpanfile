@@ -7,6 +7,7 @@ requires 'Carp';
 requires 'Params::Get';
 requires 'Params::Validate::Strict';
 requires 'Readonly';
+requires 'Return::Set';
 
 on 'test' => sub {
 	requires 'IPC::System::Simple';

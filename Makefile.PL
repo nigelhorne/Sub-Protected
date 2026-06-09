@@ -25,6 +25,7 @@ WriteMakefile(
 	'Params::Get' => 0,
 	'Params::Validate::Strict' => 0,
 	'Readonly' => 0,
+	'Return::Set' => 0,
     }, TEST_REQUIRES    => {
 	'IPC::System::Simple' => 0,
         'Test::Most'      => 0,
