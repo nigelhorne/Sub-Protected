@@ -5,6 +5,7 @@ requires 'perl', '5.008';
 requires 'Attribute::Handlers';
 requires 'Carp';
 requires 'Params::Get';
+requires 'Params::Validate::Strict';
 requires 'Readonly';
 
 on 'test' => sub {

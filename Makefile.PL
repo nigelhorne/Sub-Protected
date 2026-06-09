@@ -23,6 +23,7 @@ WriteMakefile(
         'Attribute::Handlers' => 0,
         'Carp'                => 0,
 	'Params::Get' => 0,
+	'Params::Validate::Strict' => 0,
 	'Readonly' => 0,
     }, TEST_REQUIRES    => {
 	'IPC::System::Simple' => 0,
