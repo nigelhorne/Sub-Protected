@@ -510,6 +510,12 @@ L<Return::Set>.
 
 =head1 SEE ALSO
 
+=over 4
+
+=item * L<Test Dashboard|https://nigelhorne.github.io/Sub-Protected/coverage/>
+
+=back
+
 L<Attribute::Handlers>, L<Carp>, L<Readonly>, L<Params::Get>,
 L<Params::Validate::Strict>, L<Return::Set>.
 

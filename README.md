@@ -227,6 +227,8 @@ The following table lists every error or warning this method can produce.
 
 # SEE ALSO
 
+- [Test Dashboard](https://nigelhorne.github.io/Sub-Protected/coverage/)
+
 [Attribute::Handlers](https://metacpan.org/pod/Attribute%3A%3AHandlers), [Carp](https://metacpan.org/pod/Carp), [Readonly](https://metacpan.org/pod/Readonly), [Params::Get](https://metacpan.org/pod/Params%3A%3AGet),
 [Params::Validate::Strict](https://metacpan.org/pod/Params%3A%3AValidate%3A%3AStrict), [Return::Set](https://metacpan.org/pod/Return%3A%3ASet).
 
