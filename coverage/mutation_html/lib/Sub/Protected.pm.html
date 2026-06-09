@@ -303,10 +303,10 @@ Approximate LCSAJ segments: 29<br>
 </span><span class="">   11: use Readonly;
 </span><span class="">   12: use Scalar::Util      qw(blessed);
 </span><span class="">   13: use Params::Get       qw(get_params);
-</span><span class="">   14: use Params::Validate::Strict qw(validate_strict);
+</span><span class="">   14: use Params::Validate::Strict 0.33 qw(validate_strict);
 </span><span class="">   15: use Return::Set       qw(set_return);
 </span><span class="">   16: 
-</span><span class="">   17: our $VERSION = &#39;0.01&#39;;
+</span><span class="">   17: our $VERSION = &#39;0.02&#39;;
 </span><span class="">   18: 
 </span><span class="">   19: # Public bypass flag.  Set to a true value to disable all access checks.
 </span><span class="">   20: # Use C&lt;local $Sub::Protected::BYPASS = 1&gt; in test code; see BYPASS section.
@@ -366,7 +366,7 @@ Approximate LCSAJ segments: 29<br>
 </span><span class="">   74: 
 </span><span class="">   75: =head1 VERSION
 </span><span class="">   76: 
-</span><span class="">   77: 0.01
+</span><span class="">   77: 0.02
 </span><span class="">   78: 
 </span><span class="">   79: =head1 SYNOPSIS
 </span><span class="">   80: 
@@ -881,7 +881,7 @@ Approximate LCSAJ segments: 29<br>
 </span><span class="">  589: 
 </span><span class="">  590: =head1 LICENCE AND COPYRIGHT
 </span><span class="">  591: 
-</span><span class="">  592: Copyright 2010-2026 Nigel Horne.
+</span><span class="">  592: Copyright 2026 Nigel Horne.
 </span><span class="">  593: 
 </span><span class="">  594: Usage is subject to the GPL2 licence terms.
 </span><span class="">  595: If you use it,
