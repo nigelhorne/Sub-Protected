@@ -1,0 +1,16 @@
+cpanfile
+lib/Sub/Protected.pm
+LICENSE
+Makefile.PL
+MANIFEST			This list of files
+MANIFEST.SKIP
+README.md
+t/00-load.t
+t/attribute.t
+t/basic.t
+t/bypass.t
+t/caller_integrity.t
+t/declarative.t
+t/edge_cases.t
+t/locales.t
+t/subclass.t
