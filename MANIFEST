@@ -12,5 +12,7 @@ t/bypass.t
 t/caller_integrity.t
 t/declarative.t
 t/edge_cases.t
+t/function.t
 t/locales.t
 t/subclass.t
+t/unit.t
