@@ -13,6 +13,7 @@ t/caller_integrity.t
 t/declarative.t
 t/edge_cases.t
 t/function.t
+t/integration.t
 t/locales.t
 t/subclass.t
 t/unit.t

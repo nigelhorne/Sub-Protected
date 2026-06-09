@@ -270,7 +270,7 @@ The pending list is consumed and cleared when the CHECK block fires.
 The following table lists every error or warning this method can produce.
 
     Message                                     Meaning
-    ─────────────────────────────────────────── ──────────────────────────────────────
+    ----------------------------------------	-------------------------------------
     "Sub::Protected->import: 'NAME' is not a    A sub name passed to import() failed
      valid Perl identifier"                      the identifier regex.  Use a name
                                                  matching /\A[_a-zA-Z]\w*\z/.
@@ -281,74 +281,6 @@ The following table lists every error or warning this method can produce.
                                                  a compile-time named sub.  For
                                                  post-CHECK/runtime loads, ensure
                                                  the sub is defined before import().
-
-=head3 FORMAL SPECIFICATION
-
-The following Z-notation schemas formally specify the state and operations
-of Sub::Protected.  Unicode mathematical symbols are used in this section
-only.
-
-    -- Type abbreviations
-    Package  == seq CHAR     -- a non-empty Perl package name string
-    SubName  == seq CHAR     -- a Perl identifier string
-    Proc     == seq CHAR     -- abstract: a callable code reference
-
-    -- Ancestry relation (derived dynamically from @ISA chains)
-    anc : Package -> P Package
-    forall p : Package .
-        anc p = {p} union bigcup { anc r | r in @ISA_of(p) }
-
-    -- Protected-access predicate
-    permitted : Package x Package -> BOOL
-    forall caller, owner : Package .
-        permitted(caller, owner) <=> owner in anc(caller)
-
-    -- System state
-    +-Registry-------------------------------------------+
-    | protected : P (Package x SubName)                  |
-    | bypass    : BOOL                                   |
-    | config    : { harness_bypass : BOOL }              |
-    +----------------------------------------------------+
-
-    -- Initial state
-    +-InitRegistry---------------------------------------+
-    | Registry                                           |
-    |----------------------------------------------------|
-    | protected = {}                                     |
-    | bypass    = false                                  |
-    | config    = { harness_bypass |-> true }            |
-    +----------------------------------------------------+
-
-    -- Wrap: add a sub to the protected registry
-    +-Wrap-----------------------------------------------+
-    | Delta-Registry                                     |
-    | pkg? : Package ; name? : SubName                   |
-    |----------------------------------------------------|
-    | protected' = protected union { (pkg?, name?) }     |
-    | bypass'    = bypass                                |
-    | config'    = config                                |
-    +----------------------------------------------------+
-
-    -- Bypass predicate
-    bypass_active(R) <=>
-        R.bypass or (R.config.harness_bypass and HARNESS_ACTIVE)
-
-    -- Access check: no state change
-    +-CheckAccess----------------------------------------+
-    | Xi-Registry                                        |
-    | caller? : Package                                  |
-    | owner?  : Package                                  |
-    | name?   : SubName                                  |
-    | ok!     : BOOL                                     |
-    |----------------------------------------------------|
-    | (owner?, name?) in protected                       |
-    | ok! <=> bypass_active or permitted(caller?, owner?)|
-    +----------------------------------------------------+
-
-    -- Violation (croak case):
-    --   not ok! =>
-    --   croak("name?()" ++ " is a protected method of " ++ owner?
-    --         ++ " and cannot be called from " ++ caller?)
 
 =cut
 
@@ -434,7 +366,6 @@ sub _process_one {
 # Purpose:    Construct the protection wrapper closure around a coderef.
 # Entry:      ($owner_pkg, $sub_name, $code) -- all defined; $code is a CODE ref.
 # Exit:       Returns a new anonymous CODE ref (the wrapper closure).
-# Side effects: None at construction time.
 #               At call time: calls _check_access (may croak), then $code.
 # Notes:      'goto &$code' is a deliberate, necessary exception to the
 #             "avoid goto" guideline.  It replaces the wrapper's stack frame
@@ -467,7 +398,6 @@ sub _wrap {
 #             followed by the real caller.
 # Exit:       Returns normally (undef) if access is permitted.
 #             Croaks with a descriptive message if access is denied.
-# Side effects: None on success; calls Carp::croak on failure.
 # Notes:      Frame index starts at 0 (= the wrapper closure that called us).
 #             The walk increments until a non-Sub::Protected package appears.
 #             This approach is robust against SUPER:: chains, can() delegation,
@@ -580,9 +510,79 @@ L<Return::Set>.
 L<Attribute::Handlers>, L<Carp>, L<Readonly>, L<Params::Get>,
 L<Params::Validate::Strict>, L<Return::Set>.
 
+=head2 FORMAL SPECIFICATION
+
+=head3 import
+
+The following Z-notation schemas formally specify the state and operations
+of Sub::Protected.  Unicode mathematical symbols are used in this section
+only.
+
+    -- Type abbreviations
+    Package  == seq CHAR     -- a non-empty Perl package name string
+    SubName  == seq CHAR     -- a Perl identifier string
+    Proc     == seq CHAR     -- abstract: a callable code reference
+
+    -- Ancestry relation (derived dynamically from @ISA chains)
+    anc : Package -> P Package
+    forall p : Package .
+        anc p = {p} union bigcup { anc r | r in @ISA_of(p) }
+
+    -- Protected-access predicate
+    permitted : Package x Package -> BOOL
+    forall caller, owner : Package .
+        permitted(caller, owner) <=> owner in anc(caller)
+
+    -- System state
+    +-Registry-------------------------------------------+
+    | protected : P (Package x SubName)                  |
+    | bypass    : BOOL                                   |
+    | config    : { harness_bypass : BOOL }              |
+    +----------------------------------------------------+
+
+    -- Initial state
+    +-InitRegistry---------------------------------------+
+    | Registry                                           |
+    |----------------------------------------------------|
+    | protected = {}                                     |
+    | bypass    = false                                  |
+    | config    = { harness_bypass |-> true }            |
+    +----------------------------------------------------+
+
+    -- Wrap: add a sub to the protected registry
+    +-Wrap-----------------------------------------------+
+    | Delta-Registry                                     |
+    | pkg? : Package ; name? : SubName                   |
+    |----------------------------------------------------|
+    | protected' = protected union { (pkg?, name?) }     |
+    | bypass'    = bypass                                |
+    | config'    = config                                |
+    +----------------------------------------------------+
+
+    -- Bypass predicate
+    bypass_active(R) <=>
+        R.bypass or (R.config.harness_bypass and HARNESS_ACTIVE)
+
+    -- Access check: no state change
+    +-CheckAccess----------------------------------------+
+    | Xi-Registry                                        |
+    | caller? : Package                                  |
+    | owner?  : Package                                  |
+    | name?   : SubName                                  |
+    | ok!     : BOOL                                     |
+    |----------------------------------------------------|
+    | (owner?, name?) in protected                       |
+    | ok! <=> bypass_active or permitted(caller?, owner?)|
+    +----------------------------------------------------+
+
+    -- Violation (croak case):
+    --   not ok! =>
+    --   croak("name?()" ++ " is a protected method of " ++ owner?
+    --         ++ " and cannot be called from " ++ caller?)
+
 =head1 AUTHOR
 
-Nigel Horne E<lt>nigel.horne@gmail.comE<gt>
+Nigel Horne, C<< <njh at nigelhorne.com> >>
 
 =head1 LICENSE
 
