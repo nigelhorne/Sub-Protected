@@ -22,8 +22,8 @@ WriteMakefile(
     PREREQ_PM        => {
         'Attribute::Handlers' => 0,
         'Carp'                => 0,
-    },
-    TEST_REQUIRES    => {
+    }, TEST_REQUIRES    => {
+	'IPC::System::Simple' => 0,
         'Test::Most'      => 0,
         'Test::Exception' => 0,
     },

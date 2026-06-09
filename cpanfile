@@ -6,6 +6,7 @@ requires 'Attribute::Handlers';
 requires 'Carp';
 
 on 'test' => sub {
+	requires 'IPC::System::Simple';
 	requires 'Test::Exception';
 	requires 'Test::Most';
 };
