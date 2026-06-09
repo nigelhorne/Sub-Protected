@@ -11,6 +11,7 @@ requires 'Return::Set';
 
 on 'test' => sub {
 	requires 'IPC::System::Simple';
+	requires 'Moo';
 	requires 'Test::Exception';
 	requires 'Test::Memory::Cycle';
 	requires 'Test::Mockingbird';
