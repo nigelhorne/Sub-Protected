@@ -36,6 +36,7 @@ WriteMakefile(
 	'Test::Returns' => 0,
     },
 	clean		=> { FILES => 'Sub-Protected-*' },
+	dist => $dist,
 	META_MERGE => {	# https://perldoc.perl.org/CPAN::Meta::Spec
 		'meta-spec' => { version => 2 },
 		resources => {
