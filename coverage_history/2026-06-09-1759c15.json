@@ -1,0 +1,239 @@
+{
+   "runs" : [
+      {
+         "OS" : "linux",
+         "abstract" : "Enforce protected subroutine access (Java/C++ semantics)",
+         "dir" : "/home/runner/work/Sub-Protected/Sub-Protected",
+         "finish" : 1781010259.50311,
+         "name" : "Sub-Protected",
+         "perl" : "5.40.4",
+         "run" : "-e",
+         "start" : 1781010254.20615,
+         "version" : "0.02"
+      },
+      {
+         "OS" : "linux",
+         "abstract" : "Enforce protected subroutine access (Java/C++ semantics)",
+         "dir" : "/home/runner/work/Sub-Protected/Sub-Protected",
+         "finish" : 1781010254.34868,
+         "name" : "Sub-Protected",
+         "perl" : "5.40.4",
+         "run" : "-e",
+         "start" : 1781010254.34858,
+         "version" : "0.02"
+      },
+      {
+         "OS" : "linux",
+         "abstract" : "Enforce protected subroutine access (Java/C++ semantics)",
+         "dir" : "/home/runner/work/Sub-Protected/Sub-Protected",
+         "finish" : 1781010254.65263,
+         "name" : "Sub-Protected",
+         "perl" : "5.40.4",
+         "run" : "t/00-load.t",
+         "start" : 1781010254.60315,
+         "version" : "0.02"
+      },
+      {
+         "OS" : "linux",
+         "abstract" : "Enforce protected subroutine access (Java/C++ semantics)",
+         "dir" : "/home/runner/work/Sub-Protected/Sub-Protected",
+         "finish" : 1781010255.00365,
+         "name" : "Sub-Protected",
+         "perl" : "5.40.4",
+         "run" : "t/attribute.t",
+         "start" : 1781010254.99795,
+         "version" : "0.02"
+      },
+      {
+         "OS" : "linux",
+         "abstract" : "Enforce protected subroutine access (Java/C++ semantics)",
+         "dir" : "/home/runner/work/Sub-Protected/Sub-Protected",
+         "finish" : 1781010255.34418,
+         "name" : "Sub-Protected",
+         "perl" : "5.40.4",
+         "run" : "t/basic.t",
+         "start" : 1781010255.33991,
+         "version" : "0.02"
+      },
+      {
+         "OS" : "linux",
+         "abstract" : "Enforce protected subroutine access (Java/C++ semantics)",
+         "dir" : "/home/runner/work/Sub-Protected/Sub-Protected",
+         "finish" : 1781010255.68617,
+         "name" : "Sub-Protected",
+         "perl" : "5.40.4",
+         "run" : "t/bypass.t",
+         "start" : 1781010255.68262,
+         "version" : "0.02"
+      },
+      {
+         "OS" : "linux",
+         "abstract" : "Enforce protected subroutine access (Java/C++ semantics)",
+         "dir" : "/home/runner/work/Sub-Protected/Sub-Protected",
+         "finish" : 1781010256.0216,
+         "name" : "Sub-Protected",
+         "perl" : "5.40.4",
+         "run" : "t/caller_integrity.t",
+         "start" : 1781010256.02016,
+         "version" : "0.02"
+      },
+      {
+         "OS" : "linux",
+         "abstract" : "Enforce protected subroutine access (Java/C++ semantics)",
+         "dir" : "/home/runner/work/Sub-Protected/Sub-Protected",
+         "finish" : 1781010256.35787,
+         "name" : "Sub-Protected",
+         "perl" : "5.40.4",
+         "run" : "t/declarative.t",
+         "start" : 1781010256.35406,
+         "version" : "0.02"
+      },
+      {
+         "OS" : "linux",
+         "abstract" : "Enforce protected subroutine access (Java/C++ semantics)",
+         "dir" : "/home/runner/work/Sub-Protected/Sub-Protected",
+         "finish" : 1781010256.71458,
+         "name" : "Sub-Protected",
+         "perl" : "5.40.4",
+         "run" : "t/edge_cases.t",
+         "start" : 1781010256.69698,
+         "version" : "0.02"
+      },
+      {
+         "OS" : "linux",
+         "abstract" : "Enforce protected subroutine access (Java/C++ semantics)",
+         "dir" : "/home/runner/work/Sub-Protected/Sub-Protected",
+         "finish" : 1781010257.13859,
+         "name" : "Sub-Protected",
+         "perl" : "5.40.4",
+         "run" : "t/extended_tests.t",
+         "start" : 1781010257.06817,
+         "version" : "0.02"
+      },
+      {
+         "OS" : "linux",
+         "abstract" : "Enforce protected subroutine access (Java/C++ semantics)",
+         "dir" : "/home/runner/work/Sub-Protected/Sub-Protected",
+         "finish" : 1781010257.6168,
+         "name" : "Sub-Protected",
+         "perl" : "5.40.4",
+         "run" : "t/function.t",
+         "start" : 1781010257.53412,
+         "version" : "0.02"
+      },
+      {
+         "OS" : "linux",
+         "abstract" : "Enforce protected subroutine access (Java/C++ semantics)",
+         "dir" : "/home/runner/work/Sub-Protected/Sub-Protected",
+         "finish" : 1781010258.122,
+         "name" : "Sub-Protected",
+         "perl" : "5.40.4",
+         "run" : "t/integration.t",
+         "start" : 1781010258.04315,
+         "version" : "0.02"
+      },
+      {
+         "OS" : "linux",
+         "abstract" : "Enforce protected subroutine access (Java/C++ semantics)",
+         "dir" : "/home/runner/work/Sub-Protected/Sub-Protected",
+         "finish" : 1781010258.57112,
+         "name" : "Sub-Protected",
+         "perl" : "5.40.4",
+         "run" : "t/locales.t",
+         "start" : 1781010258.53841,
+         "version" : "0.02"
+      },
+      {
+         "OS" : "linux",
+         "abstract" : "Enforce protected subroutine access (Java/C++ semantics)",
+         "dir" : "/home/runner/work/Sub-Protected/Sub-Protected",
+         "finish" : 1781010258.92706,
+         "name" : "Sub-Protected",
+         "perl" : "5.40.4",
+         "run" : "t/subclass.t",
+         "start" : 1781010258.92335,
+         "version" : "0.02"
+      },
+      {
+         "OS" : "linux",
+         "abstract" : "Enforce protected subroutine access (Java/C++ semantics)",
+         "dir" : "/home/runner/work/Sub-Protected/Sub-Protected",
+         "finish" : 1781010259.36604,
+         "name" : "Sub-Protected",
+         "perl" : "5.40.4",
+         "run" : "t/unit.t",
+         "start" : 1781010259.28357,
+         "version" : "0.02"
+      }
+   ],
+   "summary" : {
+      "Total" : {
+         "branch" : {
+            "covered" : 27,
+            "error" : 1,
+            "percentage" : 96.4285714285714,
+            "total" : 28,
+            "uncoverable" : 0
+         },
+         "condition" : {
+            "covered" : 24,
+            "error" : 2,
+            "percentage" : 92.3076923076923,
+            "total" : 26,
+            "uncoverable" : 0
+         },
+         "statement" : {
+            "covered" : 99,
+            "error" : 1,
+            "percentage" : 99,
+            "total" : 100
+         },
+         "subroutine" : {
+            "covered" : 23,
+            "percentage" : 100,
+            "total" : 23
+         },
+         "total" : {
+            "covered" : 173,
+            "error" : 4,
+            "percentage" : 97.7401129943503,
+            "total" : 177,
+            "uncoverable" : 0
+         }
+      },
+      "blib/lib/Sub/Protected.pm" : {
+         "branch" : {
+            "covered" : 27,
+            "error" : 1,
+            "percentage" : 96.4285714285714,
+            "total" : 28,
+            "uncoverable" : 0
+         },
+         "condition" : {
+            "covered" : 24,
+            "error" : 2,
+            "percentage" : 92.3076923076923,
+            "total" : 26,
+            "uncoverable" : 0
+         },
+         "statement" : {
+            "covered" : 99,
+            "error" : 1,
+            "percentage" : 99,
+            "total" : 100
+         },
+         "subroutine" : {
+            "covered" : 23,
+            "percentage" : 100,
+            "total" : 23
+         },
+         "total" : {
+            "covered" : 173,
+            "error" : 4,
+            "percentage" : 97.7401129943503,
+            "total" : 177,
+            "uncoverable" : 0
+         }
+      }
+   }
+}
