@@ -228,13 +228,20 @@ The following table lists every error or warning this method can produce.
 # SEE ALSO
 
 - [Test Dashboard](https://nigelhorne.github.io/Sub-Protected/coverage/)
+- [Sub::Abstract](https://metacpan.org/pod/Sub%3A%3AAbstract)
+
+    Sister module enforcing abstract (virtual) methods
+
+- [Sub::Private](https://metacpan.org/pod/Sub%3A%3APrivate)
+
+    Sister module enforcing strictly private (owner-only) access.
 
 [Attribute::Handlers](https://metacpan.org/pod/Attribute%3A%3AHandlers), [Carp](https://metacpan.org/pod/Carp), [Readonly](https://metacpan.org/pod/Readonly), [Params::Get](https://metacpan.org/pod/Params%3A%3AGet),
 [Params::Validate::Strict](https://metacpan.org/pod/Params%3A%3AValidate%3A%3AStrict), [Return::Set](https://metacpan.org/pod/Return%3A%3ASet).
 
-## FORMAL SPECIFICATION
+# FORMAL SPECIFICATION
 
-### import
+## import
 
 The following Z-notation schemas formally specify the state and operations
 of Sub::Protected.  Unicode mathematical symbols are used in this section

@@ -514,14 +514,22 @@ L<Return::Set>.
 
 =item * L<Test Dashboard|https://nigelhorne.github.io/Sub-Protected/coverage/>
 
+=item * L<Sub::Abstract>
+
+Sister module enforcing abstract (virtual) methods
+
+=item * L<Sub::Private>
+
+Sister module enforcing strictly private (owner-only) access.
+
 =back
 
 L<Attribute::Handlers>, L<Carp>, L<Readonly>, L<Params::Get>,
 L<Params::Validate::Strict>, L<Return::Set>.
 
-=head2 FORMAL SPECIFICATION
+=head1 FORMAL SPECIFICATION
 
-=head3 import
+=head2 import
 
 The following Z-notation schemas formally specify the state and operations
 of Sub::Protected.  Unicode mathematical symbols are used in this section
