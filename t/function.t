@@ -9,15 +9,6 @@
 use strict;
 use warnings;
 
-# Non-CPAN test dependencies are sourced from local working trees.
-# The BEGIN block untaints $ENV{HOME} so the paths survive prove -lt.
-BEGIN {
-	my ($home) = ($ENV{HOME} =~ /\A(.+)\z/ms);
-	unshift @INC, 'lib',
-		"$home/src/njh/Test-Mockingbird/lib",
-		"$home/src/njh/Test-Returns/lib";
-}
-
 use Test::Most;
 use Test::Mockingbird;
 use Test::Returns;
