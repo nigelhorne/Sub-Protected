@@ -21,7 +21,12 @@ BEGIN {
 }
 
 use Test::Most;
-use Test::Mockingbird;
+# Test::Mockingbird needs Perl 5.16.3, so it is optional: without it only
+# the spy subtests are skipped
+my $HAVE_MOCKINGBIRD;
+BEGIN {
+	$HAVE_MOCKINGBIRD = eval { require Test::Mockingbird; Test::Mockingbird->import(); 1 } ? 1 : 0;
+}
 use Test::Returns;
 use Scalar::Util qw(blessed reftype);
 use Readonly;
@@ -31,7 +36,26 @@ use Readonly;
 # -------------------------------------------------------------------
 
 Readonly::Scalar my $SP      => 'Sub::Protected';
-Readonly::Scalar my $VERSION => '0.02';
+
+# The version documented in the module's =head1 VERSION section, read from
+# the file so this test does not need editing on every release
+my $VERSION = do {
+	require Sub::Protected;
+	open(my $fh, '<', $INC{'Sub/Protected.pm'}) or die "Sub/Protected.pm: $!";
+	my $pod_version;
+	while(my $line = <$fh>) {
+		next unless $line =~ /\A=head1 VERSION\b/;
+		while(defined($line = <$fh>)) {
+			if($line =~ /\A(\d+\.\d+)\s*\z/) {
+				$pod_version = $1;
+				last;
+			}
+		}
+		last;
+	}
+	close $fh;
+	$pod_version // 'not found';
+};
 
 my %config = (
 	n_instances    => 5,       # number of concurrent objects in concurrency test
@@ -617,6 +641,7 @@ subtest 'harness_bypass=0 enforces checks even when HARNESS_ACTIVE is set' => su
 # ===================================================================
 
 subtest 'spy: Sub::Protected::croak called on unauthorised access' => sub {
+	plan skip_all => 'Test::Mockingbird not installed' unless $HAVE_MOCKINGBIRD;
 	plan tests => 3;
 
 	local $ENV{HARNESS_ACTIVE}    = 0;
@@ -625,7 +650,7 @@ subtest 'spy: Sub::Protected::croak called on unauthorised access' => sub {
 	# Spy on the croak alias imported into Sub::Protected.
 	# The spy records calls but still executes the original croak,
 	# so we must catch it with eval.
-	my $spy = spy 'Sub::Protected::croak';
+	my $spy = spy('Sub::Protected::croak');
 
 	eval { IntVet->new->examine(IntDog->new) };
 
@@ -643,12 +668,13 @@ subtest 'spy: Sub::Protected::croak called on unauthorised access' => sub {
 };
 
 subtest 'spy: croak NOT called on authorised access' => sub {
+	plan skip_all => 'Test::Mockingbird not installed' unless $HAVE_MOCKINGBIRD;
 	plan tests => 1;
 
 	local $ENV{HARNESS_ACTIVE}    = 0;
 	local $Sub::Protected::BYPASS = 0;
 
-	my $spy = spy 'Sub::Protected::croak';
+	my $spy = spy('Sub::Protected::croak');
 
 	eval { IntDog->new->speak };    # authorised -- must not croak
 

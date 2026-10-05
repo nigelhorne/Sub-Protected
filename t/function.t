@@ -11,7 +11,12 @@ use strict;
 use warnings;
 
 use Test::Most;
-use Test::Mockingbird;
+
+# Test::Mockingbird needs Perl 5.16.3, so it is an optional test dependency
+BEGIN {
+	eval { require Test::Mockingbird; Test::Mockingbird->import(); 1 }
+		or plan(skip_all => 'Test::Mockingbird not installed');
+}
 use Test::Returns;
 use Test::Memory::Cycle;
 use Scalar::Util qw(reftype);
@@ -254,25 +259,32 @@ subtest 'import(): wrapped sub enforces access (post-CHECK)' => sub {
 		'import: unrelated package blocked from wrapped sub';
 };
 
-subtest 'import(): spies confirm get_params and validate_strict are called' => sub {
-	plan tests => 2;
+subtest 'import(): get_params only for a single reference; validate_strict always' => sub {
+	plan tests => 3;
 
 	# Spy on Sub::Protected's imported aliases (same reason as set_return above)
 	my $spy_gp = spy 'Sub::Protected::get_params';
 	my $spy_vs = spy 'Sub::Protected::validate_strict';
 
-	# Define and wrap a new sub so the full validation path is exercised
+	# A plain list must bypass Params::Get, so qw(subs _x) is never read as
+	# subs => '_x'; an arrayref is normalised by it
 	{
 		package FT::SpyTarget;
-		sub _spy_sub { 'spied' }
+		sub _spy_sub  { 'spied' }
+		sub _spy_sub2 { 'spied' }
 		Sub::Protected->import('_spy_sub');
 	}
-
-	my @gp_calls = $spy_gp->();
+	my @gp_plain = $spy_gp->();
+	{
+		package FT::SpyTarget;
+		Sub::Protected->import([ '_spy_sub2' ]);
+	}
+	my @gp_all = $spy_gp->();
 	my @vs_calls = $spy_vs->();
 
-	ok scalar(@gp_calls) >= 1, 'get_params invoked during import() with sub names';
-	ok scalar(@vs_calls) >= 1, 'validate_strict invoked during import() with sub names';
+	is scalar(@gp_plain), 0, 'get_params not used for a plain list';
+	is scalar(@gp_all), 1, 'get_params used for a single arrayref';
+	is scalar(@vs_calls), 2, 'validate_strict checks every name';
 
 	restore_all();
 };

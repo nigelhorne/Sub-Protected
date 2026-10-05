@@ -1,20 +1,19 @@
 package Sub::Protected;
 
-# Minimum Perl version: 5.8 (Attribute::Handlers became core in 5.8)
-use 5.008;
+# Minimum Perl version: 5.10 (the // operator; several dependencies need it).
+# Loading after CHECK (require, string eval) also needs 5.14: see LIMITATIONS.
+use 5.010;
 use strict;
 use warnings;
-use autodie qw(:all);
 
-use Carp              qw(croak carp);
+use Carp              qw(croak);
 use Attribute::Handlers;
 use Readonly;
-use Scalar::Util      qw(blessed);
 use Params::Get       qw(get_params);
 use Params::Validate::Strict 0.33 qw(validate_strict);
 use Return::Set       qw(set_return);
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 # Public bypass flag.  Set to a true value to disable all access checks.
 # Use C<local $Sub::Protected::BYPASS = 1> in test code; see BYPASS section.
@@ -55,6 +54,14 @@ my $_post_check = (defined(${^GLOBAL_PHASE}) && ${^GLOBAL_PHASE} ne 'START') ? 1
 # -------------------------------------------------------------------
 # ATTRIBUTE HANDLER
 # -------------------------------------------------------------------
+
+# Another module may already own UNIVERSAL::Protected (a :Protected attribute
+# of its own).  Redefining it would silently change that module's behaviour,
+# so say so loudly.  This runs before the sub below is compiled.
+BEGIN {
+	Carp::carp(__PACKAGE__ . ": UNIVERSAL::Protected is already defined; another module's :Protected attribute will be replaced")
+		if defined &UNIVERSAL::Protected;
+}
 
 # Install the :Protected attribute in UNIVERSAL so every package can use it
 # the moment this module is loaded, with no per-package setup needed.
@@ -100,7 +107,7 @@ Sub::Protected - Enforce protected subroutine access (Java/C++ semantics)
 
 =head1 VERSION
 
-0.02
+0.03
 
 =head1 SYNOPSIS
 
@@ -202,6 +209,36 @@ scenarios.
 
     _helper() is a protected method of Foo and cannot be called from Bar
 
+The error is raised with L<Carp/croak>, so it reports the file and line of
+the offending call, not a line inside Sub::Protected.
+
+=head2 How access is decided
+
+=over 4
+
+=item * Only the immediate caller counts
+
+The decision is made on the package of the code that called the protected
+sub.  If C<Bar::run> calls C<Foo::public>, which calls C<Foo::_helper>, the
+call is allowed: the immediate caller is C<Foo>.  If C<Foo::public> instead
+calls a C<Bar> method that calls C<Foo::_helper>, it is blocked, however
+deep the chain.
+
+=item * Subclasses are allowed
+
+A caller whose package C<isa> the owner is allowed, so calls through
+C<SUPER::>, C<< $self->can('_helper') >> and ordinary inherited method
+calls all work from a subclass.
+
+=item * The wrapper is invisible
+
+The wrapper hands over with C<goto &sub>, so inside the protected sub
+C<caller()> reports the real caller, not Sub::Protected.  Arguments
+(including aliasing of C<@_>), calling context (list, scalar or void) and
+return values, including false ones, pass through unchanged.
+
+=back
+
 =head1 PUBLIC INTERFACE
 
 =head2 import
@@ -242,16 +279,15 @@ Must be a non-empty string.
 Zero or more sub names to protect in the calling package.  Each must be a
 valid Perl identifier: matching C</\A[_a-zA-Z]\w*\z/>.
 
-The names are normalised by L<Params::Get>, so these calls are equivalent:
+These calls are equivalent:
 
     Sub::Protected->import(qw(_a _b));
     Sub::Protected->import([ qw(_a _b) ]);
     Sub::Protected->import({ subs => [ qw(_a _b) ] });
-    Sub::Protected->import(subs => '_a');     # a single name
 
-Because of the last form, a two-element list whose first element is the
-string C<subs> is read as C<< subs => NAME >>: C<qw(subs _x)> protects only
-C<_x>.  To protect a sub called C<subs>, pass C<< { subs => ['subs', ...] } >>.
+A plain list is always a list of names, so C<qw(subs _x)> protects both
+C<subs> and C<_x>.  A single arrayref or hashref is normalised by
+L<Params::Get>.
 
 =back
 
@@ -367,11 +403,16 @@ sub import {
 	# No sub names: the :Protected attribute is always active via UNIVERSAL.
 	return _return_class($class) unless @subs;
 
-	# Normalise the argument list to support positional and hash-ref styles.
-	my $args = get_params('subs', \@subs);
-	my @names = ref($args->{subs}) eq 'ARRAY'
-		? @{$args->{subs}}
-		: ($args->{subs});
+	# A plain list is always a list of names.  Only a single arrayref or
+	# hashref goes through Params::Get: passing a plain list to it would read
+	# qw(subs _x) as subs => '_x', silently leaving a sub called subs open.
+	my @names = @subs;
+	if (@subs == 1 && ref($subs[0]) && ref($subs[0]) ne 'CODE') {
+		my $args = get_params('subs', \@subs);
+		@names = ref($args->{subs}) eq 'ARRAY'
+			? @{$args->{subs}}
+			: ($args->{subs});
+	}
 
 	# Validate each name against the schema; validate_strict croaks on failure.
 	# Params::Validate::Strict silently accepts undef for type => 'string', so
@@ -595,12 +636,17 @@ compile time instead.
 
 The C<:Protected> attribute is installed in C<UNIVERSAL>, which is
 intentional (any package can use it after a single C<use>), but it does
-introduce C<UNIVERSAL::Protected> into the global namespace.
+introduce C<UNIVERSAL::Protected> into the global namespace.  If another
+module has already defined C<UNIVERSAL::Protected>, loading Sub::Protected
+warns that it is being replaced.
 
 =item Thread safety
 
-C<@_pending> and C<$BYPASS> are unguarded package globals.  Do not use
-concurrent C<use Sub::Protected qw(...)> calls across threads.
+C<@_pending> and C<$BYPASS> are unguarded package globals.  Subs are
+normally wrapped before any thread is started, which is safe.  Calling
+C<< Sub::Protected->import(...) >> or loading a package that uses
+Sub::Protected from more than one thread at once is not supported.
+C<$BYPASS> is per-thread, as with any C<our> variable under ithreads.
 
 =back
 
@@ -610,7 +656,6 @@ L<Carp> (core),
 L<Attribute::Handlers> (core since 5.8),
 L<B::Hooks::EndOfScope>,
 L<Readonly>,
-L<Scalar::Util> (core),
 L<Sub::Identify>,
 L<Params::Get>,
 L<Params::Validate::Strict>,

@@ -27,7 +27,12 @@ BEGIN {
 }
 
 use Test::Most;
-use Test::Mockingbird;
+
+# Test::Mockingbird needs Perl 5.16.3, so it is an optional test dependency
+BEGIN {
+	eval { require Test::Mockingbird; Test::Mockingbird->import(); 1 }
+		or plan(skip_all => 'Test::Mockingbird not installed');
+}
 use Test::Returns;
 use Readonly;
 
@@ -195,11 +200,7 @@ sub invalid_re {
 	sub _s2 { 'hash' }
 }
 {
-	package UT::StyleNamed;
-	sub _s1 { 'named' }
-}
-{
-	# A sub literally called "subs": the POD documents how to protect it
+	# A sub literally called "subs" must be protectable like any other
 	package UT::StyleSubs;
 	sub subs { 'subs' }
 	sub _x   { 'x' }
@@ -334,12 +335,13 @@ subtest 'import(): croaks with the documented message for a missing sub' => sub 
 # ===================================================================
 # SECTION 4: import() argument styles
 #
-# POD Arguments: list, arrayref, { subs => [...] } and subs => NAME are
-# equivalent; qw(subs _x) protects only _x.
+# POD Arguments: a plain list, an arrayref and { subs => [...] } are
+# equivalent.  A plain list is always a list of names, so qw(subs _x)
+# protects both; only a single arrayref or hashref goes to Params::Get.
 # ===================================================================
 
 subtest 'import(): every documented argument style protects the subs' => sub {
-	plan tests => 7;
+	plan tests => 3;
 
 	{
 		package UT::StyleList;
@@ -353,10 +355,6 @@ subtest 'import(): every documented argument style protects the subs' => sub {
 		package UT::StyleHash;
 		Sub::Protected->import({ subs => [ qw(_s1 _s2) ] });
 	}
-	{
-		package UT::StyleNamed;
-		Sub::Protected->import(subs => '_s1');
-	}
 
 	local $ENV{HARNESS_ACTIVE}    = 0;
 	local $Sub::Protected::BYPASS = 0;
@@ -366,10 +364,15 @@ subtest 'import(): every documented argument style protects the subs' => sub {
 		throws_ok { &{"${pkg}::_s2"}() } violation_re('_s2', $pkg, 'main'),
 			"$pkg: every listed name is protected";
 	}
-	throws_ok { UT::StyleNamed::_s1() } violation_re('_s1', 'UT::StyleNamed', 'main'),
-		'subs => NAME protects NAME';
+};
 
-	# Normalisation is delegated to Params::Get, as documented
+subtest 'import(): only a single reference is passed to Params::Get' => sub {
+	plan tests => 4;
+
+	local $ENV{HARNESS_ACTIVE}    = 0;
+	local $Sub::Protected::BYPASS = 0;
+
+	# A plain list must never be reinterpreted as named arguments
 	my $spy = spy 'Sub::Protected::get_params';
 	{
 		package UT::StyleList;
@@ -377,27 +380,30 @@ subtest 'import(): every documented argument style protects the subs' => sub {
 	}
 	my @calls = $spy->();
 	restore_all();
-	is scalar(@calls), 1, 'Params::Get normalises the arguments';
+	is scalar(@calls), 0, 'a plain list is not passed to Params::Get';
 
-	# Force both shapes Params::Get may return: a list and a single name
+	# Force both shapes Params::Get may return for a reference: a list of
+	# names and a single name
 	{
 		my $guard = mock_scoped 'Sub::Protected::get_params' => sub { { subs => [ '_s4' ] } };
 		package UT::StyleList;
-		Sub::Protected->import('_ignored');
+		Sub::Protected->import([ '_ignored' ]);
 	}
 	{
 		my $guard = mock_scoped 'Sub::Protected::get_params' => sub { { subs => '_s5' } };
 		package UT::StyleList;
-		Sub::Protected->import('_ignored');
+		Sub::Protected->import({ subs => '_ignored' });
 	}
+	throws_ok { UT::StyleList::_s3() } violation_re('_s3', 'UT::StyleList', 'main'),
+		'a single plain name is protected';
 	throws_ok { UT::StyleList::_s4() } violation_re('_s4', 'UT::StyleList', 'main'),
 		'a list of names from Params::Get is honoured';
 	throws_ok { UT::StyleList::_s5() } violation_re('_s5', 'UT::StyleList', 'main'),
 		'a single name from Params::Get is honoured';
 };
 
-subtest 'import(): a sub called "subs" needs the hashref form' => sub {
-	plan tests => 3;
+subtest 'import(): a sub called "subs" is an ordinary name' => sub {
+	plan tests => 2;
 
 	{
 		package UT::StyleSubs;
@@ -407,17 +413,11 @@ subtest 'import(): a sub called "subs" needs the hashref form' => sub {
 	local $ENV{HARNESS_ACTIVE}    = 0;
 	local $Sub::Protected::BYPASS = 0;
 
-	# As documented, qw(subs _x) is read as subs => '_x'
-	is(UT::StyleSubs::subs(), 'subs', 'qw(subs _x) leaves subs() unprotected');
+	# qw(subs _x) must not be read as subs => '_x'
+	throws_ok { UT::StyleSubs::subs() } violation_re('subs', 'UT::StyleSubs', 'main'),
+		'qw(subs _x) protects subs()';
 	throws_ok { UT::StyleSubs::_x() } violation_re('_x', 'UT::StyleSubs', 'main'),
 		'qw(subs _x) protects _x';
-
-	{
-		package UT::StyleSubs;
-		Sub::Protected->import({ subs => ['subs'] });
-	}
-	throws_ok { UT::StyleSubs::subs() } violation_re('subs', 'UT::StyleSubs', 'main'),
-		'{ subs => [\'subs\'] } protects subs()';
 };
 
 # ===================================================================
