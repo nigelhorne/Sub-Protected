@@ -101,7 +101,13 @@ sub run_child {
 	my $stdout = do { local $/; <$out> };
 	my $stderr = do { local $/; <$err> };
 	waitpid($pid, 0);
-	return ($stdout // q{}, $stderr // q{});
+
+	# The pipes are read raw, so on Windows lines end in CRLF
+	for ($stdout, $stderr) {
+		$_ //= q{};
+		s/\r\n/\n/g;
+	}
+	return ($stdout, $stderr);
 }
 
 for my $form (['attribute', 'RTAttr'], ['declarative', 'RTDecl']) {
