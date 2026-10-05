@@ -7,9 +7,16 @@ Revision history for Sub-Protected
 	  Perl warned "Too late to run CHECK block".  Both the :Protected
 	  attribute and the declarative form are now wrapped after CHECK
 	  (needs Perl 5.14 or later)
+	- import() no longer clears the caller's $@
+
+	[ Documentation ]
+	- import(): documented the arrayref, hashref and subs => NAME argument
+	  forms, the qw(subs ...) pitfall, and the FORMAL SPECIFICATION
 
 	[ Testing ]
 	- Added t/runtime_load.t
+	- Rewrote t/unit.t around a ledger of documented messages and return
+	  states, with global-state checks
 
 	[ Dependencies ]
 	- Added B::Hooks::EndOfScope and Sub::Identify

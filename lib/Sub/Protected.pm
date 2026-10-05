@@ -92,6 +92,8 @@ sub UNIVERSAL::Protected : ATTR(CODE,BEGIN,CHECK) {
 # PUBLIC INTERFACE
 # -------------------------------------------------------------------
 
+=encoding utf8
+
 =head1 NAME
 
 Sub::Protected - Enforce protected subroutine access (Java/C++ semantics)
@@ -240,6 +242,17 @@ Must be a non-empty string.
 Zero or more sub names to protect in the calling package.  Each must be a
 valid Perl identifier: matching C</\A[_a-zA-Z]\w*\z/>.
 
+The names are normalised by L<Params::Get>, so these calls are equivalent:
+
+    Sub::Protected->import(qw(_a _b));
+    Sub::Protected->import([ qw(_a _b) ]);
+    Sub::Protected->import({ subs => [ qw(_a _b) ] });
+    Sub::Protected->import(subs => '_a');     # a single name
+
+Because of the last form, a two-element list whose first element is the
+string C<subs> is read as C<< subs => NAME >>: C<qw(subs _x)> protects only
+C<_x>.  To protect a sub called C<subs>, pass C<< { subs => ['subs', ...] } >>.
+
 =back
 
 =head3 Returns
@@ -260,6 +273,11 @@ or wrapped immediately (if post-CHECK).
 =item *
 
 The pending list is consumed and cleared when the CHECK block fires.
+
+=item *
+
+C<$@>, C<$!> and C<$_> are left unchanged, as are any pending C<alarm()>
+timers.
 
 =back
 
@@ -305,6 +323,8 @@ The following table lists every error or warning this method can produce.
     "Sub::Protected->import: 'NAME' is not a    A sub name passed to import() failed
      valid Perl identifier"                      the identifier regex.  Use a name
                                                  matching /\A[_a-zA-Z]\w*\z/.
+                                                 NAME is shown as '' when the
+                                                 name was undef or a reference.
 
     "Sub::Protected: PKG::NAME is not defined"  The named sub was not found in the
                                                  package stash at wrap time.  For
@@ -313,13 +333,39 @@ The following table lists every error or warning this method can produce.
                                                  post-CHECK/runtime loads, ensure
                                                  the sub is defined before import().
 
+Calling a protected sub from outside its package or subclasses croaks
+with the message shown in L</Error message format>.
+
+=head3 FORMAL SPECIFICATION
+
+    ValidName ≙ { n : seq CHAR | n matches /\A[_a-zA-Z]\w*\z/ }
+
+    ┌─ Import ──────────────────────────────────────────
+    │ ΔRegistry
+    │ class? : Package ; caller? : Package
+    │ names? : seq SubName ; postCheck : 𝔹
+    │ result! : Package
+    ├───────────────────────────────────────────────────
+    │ ∀ n ∈ ran names? • n ∈ ValidName
+    │ postCheck ⇒ (∀ n ∈ ran names? • defined(caller?, n))
+    │ postCheck ⇒ protected′ = protected ∪ { n : ran names? • (caller?, n) }
+    │ ¬postCheck ⇒ pending′ = pending ⁀ ⟨ n : names? • (caller?, n) ⟩
+    │ result! = class?
+    └───────────────────────────────────────────────────
+
+    -- Failure cases (croak, Registry unchanged):
+    --   ∃ n ∈ ran names? • n ∉ ValidName
+    --     ⇒ "Sub::Protected->import: 'n' is not a valid Perl identifier"
+    --   postCheck ∧ ∃ n ∈ ran names? • ¬defined(caller?, n)
+    --     ⇒ "Sub::Protected: caller?::n is not defined"
+
 =cut
 
 sub import {
 	my ($class, @subs) = @_;
 
 	# No sub names: the :Protected attribute is always active via UNIVERSAL.
-	return set_return($class, { type => 'string' }) unless @subs;
+	return _return_class($class) unless @subs;
 
 	# Normalise the argument list to support positional and hash-ref styles.
 	my $args = get_params('subs', \@subs);
@@ -330,11 +376,15 @@ sub import {
 	# Validate each name against the schema; validate_strict croaks on failure.
 	# Params::Validate::Strict silently accepts undef for type => 'string', so
 	# we coerce undef and references to '' so the regex check fires for them.
+	# local $@ so a successful eval does not clear the caller's $@.
 	for my $sub_name (@names) {
 		my $check = (defined $sub_name && !ref $sub_name) ? $sub_name : q{};
-		eval { validate_strict(schema => $SUB_NAME_SCHEMA, input => { name => $check }) };
+		my $valid = do {
+			local $@;
+			eval { validate_strict(schema => $SUB_NAME_SCHEMA, input => { name => $check }); 1 };
+		};
 		croak "$SELF->import: '$check' is not a valid Perl identifier"
-			if $@;
+			unless $valid;
 	}
 
 	# Schedule or immediately apply wrapping depending on compilation phase.
@@ -347,7 +397,7 @@ sub import {
 		push @_pending, [ $owner_pkg, $_ ] for @names;
 	}
 
-	return set_return($class, { type => 'string' });
+	return _return_class($class);
 }
 
 # -------------------------------------------------------------------
@@ -372,6 +422,19 @@ sub import {
 # -------------------------------------------------------------------
 # PRIVATE SUBROUTINES
 # -------------------------------------------------------------------
+
+# _return_class
+# Purpose:    Validate and return import()'s return value.
+# Entry:      ($class) -- the importing class name.
+# Exit:       Returns $class, checked against the documented string schema.
+# Notes:      Return::Set::set_return clears $@ even when it succeeds, and
+#             import() promises to leave $@ alone, so it is localised here.
+sub _return_class {
+	my ($class) = @_;
+
+	local $@;
+	return set_return($class, { type => 'string' });
+}
 
 # _process_one
 # Purpose:    Look up a named sub in a package's stash and wrap it.
