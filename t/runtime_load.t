@@ -68,9 +68,27 @@ for my $file (keys %modules) {
 
 my $lib = File::Spec->rel2abs('lib');
 
+# Quote a path as a single-quoted Perl string literal
+sub perl_quote {
+	my $s = shift;
+	$s =~ s/([\\'])/\\$1/g;
+	return "'$s'";
+}
+
+my $script_count = 0;
+
 # Run $code in a child perl with warnings enabled; return (stdout, stderr).
+# The code is written to a script file rather than passed with -e, since on
+# Windows the arguments are joined into one command line, which mangles
+# multi-line code and quotes.  The include paths go in the script for the
+# same reason (and because they may contain spaces).
 sub run_child {
 	my $code = shift;
+
+	my $script = File::Spec->catfile($dir, 'child' . ++$script_count . '.pl');
+	open(my $fh, '>', $script) or die "$script: $!";
+	print $fh 'use lib ', perl_quote($lib), ', ', perl_quote($dir), ";\n", $code;
+	close $fh;
 
 	local $ENV{HARNESS_ACTIVE};
 	delete $ENV{HARNESS_ACTIVE};
@@ -78,7 +96,7 @@ sub run_child {
 	delete $ENV{PERL5OPT};
 
 	my $err = gensym;
-	my $pid = open3(my $in, my $out, $err, $^X, '-w', "-I$lib", "-I$dir", '-e', $code);
+	my $pid = open3(my $in, my $out, $err, $^X, '-w', $script);
 	close $in;
 	my $stdout = do { local $/; <$out> };
 	my $stderr = do { local $/; <$err> };
