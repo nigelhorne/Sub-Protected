@@ -16,11 +16,12 @@ on 'configure' => sub {
 };
 
 on 'test' => sub {
-	requires 'Moo';
 	requires 'Test::Memory::Cycle';
 	requires 'Test::Most';
+	requires 'Test::Needs';
 	requires 'Test::Returns';
-	recommends 'Test::Mockingbird';
+	recommends 'Moo';   # Large; only needed for one subtest
+	recommends 'Test::Mockingbird';   # Needs Perl 5.16.3
 };
 
 on 'develop' => sub {

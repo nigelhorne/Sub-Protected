@@ -23,18 +23,18 @@ WriteMakefile(
 		'ExtUtils::MakeMaker' => 6.64,	# For TEST_REQUIRES
 	}, PREREQ_PM        => {
 		'Attribute::Handlers' => 0,
-	'B::Hooks::EndOfScope' => 0,
+		'B::Hooks::EndOfScope' => 0,
 		'Carp'                => 0,
-	'Params::Get' => 0,
-	'Params::Validate::Strict' => 0.33,
-	'Readonly' => 0,
-	'Return::Set' => 0,
-	'Sub::Identify' => 0,
+		'Params::Get' => 0,
+		'Params::Validate::Strict' => 0.33,
+		'Readonly' => 0,
+		'Return::Set' => 0,
+		'Sub::Identify' => 0,
 	}, TEST_REQUIRES    => {
-	'Moo' => 0,
-	'Test::Memory::Cycle' => 0,
+		'Test::Memory::Cycle' => 0,
 		'Test::Most'      => 0,
-	'Test::Returns' => 0,
+		'Test::Needs' => 0,
+		'Test::Returns' => 0,
 	},
 	clean		=> { FILES => 'Sub-Protected-*' },
 	dist => $dist,
@@ -43,9 +43,10 @@ WriteMakefile(
 		dynamic_config => 0,
 		prereqs => {
 			test => {
+				# Tests that use these skip without them
 				recommends => {
-					# Needs Perl 5.16.3; tests that use it skip without it
-					'Test::Mockingbird' => 0,
+					'Moo' => 0,	# Large; only needed for one subtest
+					'Test::Mockingbird' => 0,	# Needs Perl 5.16.3
 				},
 			},
 		},

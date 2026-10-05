@@ -21,6 +21,7 @@ BEGIN {
 }
 
 use Test::Most;
+use Test::Needs;
 # Test::Mockingbird needs Perl 5.16.3, so it is optional: without it only
 # the spy subtests are skipped
 my $HAVE_MOCKINGBIRD;
@@ -198,28 +199,8 @@ use_ok $SP or BAIL_OUT "$SP failed to load";
 }
 
 # ===== Scenario D: Moo integration =====
-# Sub::Protected applied AFTER Moo builds the class, via declarative form.
-
-{
-	package IntMooBase;
-	use Moo;
-	use Sub::Protected qw(_moo_secret);
-
-	sub _moo_secret { 'moo secret' }
-	sub get_secret  { (shift)->_moo_secret }
-}
-
-{
-	package IntMooChild;
-	use Moo;
-	extends 'IntMooBase';
-}
-
-{
-	package IntMooStranger;
-	sub new   { bless {}, shift }
-	sub probe { IntMooBase->new->_moo_secret }
-}
+# Moo is optional, so its classes are built inside the Moo subtest (SECTION 8),
+# after test_needs has had the chance to skip.
 
 # ===== Scenario E: cross-protected calls (protected calling protected) =====
 # Two protected subs in the same package calling each other.
@@ -537,8 +518,38 @@ subtest 'UNIVERSAL registration: stranger still blocked without per-package use'
 # SECTION 8: Moo integration
 # ===================================================================
 
-subtest 'Moo: declarative form wraps a Moo-generated class' => sub {
-	plan tests => 3;
+subtest 'Moo: declarative form protects subs in Moo classes' => sub {
+	# test_needs must come before plan: it skips by calling plan itself
+	test_needs 'Moo';
+	plan tests => 4;
+
+	# Moo is loaded at run time, so it can only be used here, after
+	# test_needs.  The subs are still compiled with the file, so the
+	# declarative form wraps them at CHECK as usual; Moo->import() only adds
+	# new(), has() and friends and leaves them alone.  extends() is called
+	# with parentheses because it does not exist when this file is compiled.
+	{
+		package IntMooBase;
+		use Sub::Protected qw(_moo_secret);
+		require Moo;
+		Moo->import();
+
+		sub _moo_secret { 'moo secret' }
+		sub get_secret  { (shift)->_moo_secret }
+	}
+	{
+		package IntMooChild;
+		require Moo;
+		Moo->import();
+		extends('IntMooBase');
+
+		sub child_secret { (shift)->_moo_secret }
+	}
+	{
+		package IntMooStranger;
+		sub new   { bless {}, shift }
+		sub probe { IntMooBase->new->_moo_secret }
+	}
 
 	local $ENV{HARNESS_ACTIVE}    = 0;
 	local $Sub::Protected::BYPASS = 0;
@@ -548,19 +559,13 @@ subtest 'Moo: declarative form wraps a Moo-generated class' => sub {
 		'Moo owner can call declarative-wrapped protected sub';
 	is $result, $config{moo_result}, 'correct return value from Moo class';
 
-	# Moo subclass (IntMooChild extends IntMooBase) must also be allowed
-	lives_ok { IntMooChild->new->get_secret }
-		'Moo subclass can call parent protected sub';
-};
-
-subtest 'Moo: stranger blocked from Moo-wrapped sub' => sub {
-	plan tests => 1;
-
-	local $ENV{HARNESS_ACTIVE}    = 0;
-	local $Sub::Protected::BYPASS = 0;
+	# IntMooChild extends IntMooBase, so it may call the protected sub itself
+	is(IntMooChild->new->child_secret, $config{moo_result},
+		'Moo subclass can call parent protected sub directly');
 
 	throws_ok { IntMooStranger->new->probe }
-		qr/protected method/, 'stranger blocked from Moo-wrapped protected sub';
+		qr/\A_moo_secret\(\) is a protected method of IntMooBase and cannot be called from IntMooStranger at /,
+		'stranger blocked from Moo-wrapped protected sub';
 };
 
 # ===================================================================
