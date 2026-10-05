@@ -6,7 +6,7 @@ requires 'Attribute::Handlers';
 requires 'B::Hooks::EndOfScope';
 requires 'Carp';
 requires 'Params::Get';
-requires 'Params::Validate::Strict';
+requires 'Params::Validate::Strict', '0.33';
 requires 'Readonly';
 requires 'Return::Set';
 requires 'Sub::Identify';
