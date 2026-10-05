@@ -31,6 +31,7 @@ WriteMakefile(
 		'Return::Set' => 0,
 		'Sub::Identify' => 0,
 	}, TEST_REQUIRES    => {
+		'Test::DescribeMe' => 0,
 		'Test::Memory::Cycle' => 0,
 		'Test::Most'      => 0,
 		'Test::Needs' => 0,

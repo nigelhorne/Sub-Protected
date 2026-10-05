@@ -16,6 +16,7 @@ on 'configure' => sub {
 };
 
 on 'test' => sub {
+	requires 'Test::DescribeMe';
 	requires 'Test::Memory::Cycle';
 	requires 'Test::Most';
 	requires 'Test::Needs';
