@@ -1,6 +1,6 @@
 Revision history for Sub-Protected
 
-0.03
+0.03	Mon Oct  5 10:32:25 AM EDT 2026
 	[ Bug Fixes ]
 	- Subs were left unprotected when Sub::Protected and the package using
 	  it were loaded at run time (require, plugin loader, string eval), and

@@ -4,7 +4,7 @@ Sub::Protected - Enforce protected subroutine access (Java/C++ semantics)
 
 ## Version
 
-0.02
+0.03
 
 ## Synopsis
 
@@ -103,6 +103,32 @@ scenarios.
 _helper() is a protected method of Foo and cannot be called from Bar
 ```
 
+The error is raised with ["croak" in Carp](https://metacpan.org/pod/Carp#croak), so it reports the file and line of
+the offending call, not a line inside Sub::Protected.
+
+### How Access Is Decided
+
+- Only the immediate caller counts
+
+    The decision is made on the package of the code that called the protected
+    sub.  If `Bar::run` calls `Foo::public`, which calls `Foo::_helper`, the
+    call is allowed: the immediate caller is `Foo`.  If `Foo::public` instead
+    calls a `Bar` method that calls `Foo::_helper`, it is blocked, however
+    deep the chain.
+
+- Subclasses are allowed
+
+    A caller whose package `isa` the owner is allowed, so calls through
+    `SUPER::`, `$self->can('_helper')` and ordinary inherited method
+    calls all work from a subclass.
+
+- The wrapper is invisible
+
+    The wrapper hands over with `goto &sub`, so inside the protected sub
+    `caller()` reports the real caller, not Sub::Protected.  Arguments
+    (including aliasing of `@_`), calling context (list, scalar or void) and
+    return values, including false ones, pass through unchanged.
+
 ## Public Interface
 
 ### Import
@@ -143,6 +169,18 @@ be loaded at compile time (`use`, or `require` inside `BEGIN`).
     Zero or more sub names to protect in the calling package.  Each must be a
     valid Perl identifier: matching `/\A[_a-zA-Z]\w*\z/`.
 
+    These calls are equivalent:
+
+    ```perl
+    Sub::Protected->import(qw(_a _b));
+    Sub::Protected->import([ qw(_a _b) ]);
+    Sub::Protected->import({ subs => [ qw(_a _b) ] });
+    ```
+
+    A plain list is always a list of names, so `qw(subs _x)` protects both
+    `subs` and `_x`.  A single arrayref or hashref is normalised by
+    [Params::Get](https://metacpan.org/pod/Params%3A%3AGet).
+
 #### Returns
 
 `$class` (the importing class name).  The return value is ignored by the
@@ -154,6 +192,8 @@ level.
 - Each supplied sub name is appended to an internal pending list (if pre-CHECK)
 or wrapped immediately (if post-CHECK).
 - The pending list is consumed and cleared when the CHECK block fires.
+- `$@`, `$!` and `$_` are left unchanged, as are any pending `alarm()`
+timers.
 
 #### Example
 
@@ -204,6 +244,8 @@ Message                                     Meaning
 "Sub::Protected->import: 'NAME' is not a    A sub name passed to import() failed
  valid Perl identifier"                      the identifier regex.  Use a name
                                              matching /\A[_a-zA-Z]\w*\z/.
+                                             NAME is shown as '' when the
+                                             name was undef or a reference.
 
 "Sub::Protected: PKG::NAME is not defined"  The named sub was not found in the
                                              package stash at wrap time.  For
@@ -211,6 +253,34 @@ Message                                     Meaning
                                              a compile-time named sub.  For
                                              post-CHECK/runtime loads, ensure
                                              the sub is defined before import().
+```
+
+Calling a protected sub from outside its package or subclasses croaks
+with the message shown in ["Error message format"](#error-message-format).
+
+#### Formal Specification
+
+```
+ValidName ≙ { n : seq CHAR | n matches /\A[_a-zA-Z]\w*\z/ }
+
+┌─ Import ──────────────────────────────────────────
+│ ΔRegistry
+│ class? : Package ; caller? : Package
+│ names? : seq SubName ; postCheck : 𝔹
+│ result! : Package
+├───────────────────────────────────────────────────
+│ ∀ n ∈ ran names? • n ∈ ValidName
+│ postCheck ⇒ (∀ n ∈ ran names? • defined(caller?, n))
+│ postCheck ⇒ protected′ = protected ∪ { n : ran names? • (caller?, n) }
+│ ¬postCheck ⇒ pending′ = pending ⁀ ⟨ n : names? • (caller?, n) ⟩
+│ result! = class?
+└───────────────────────────────────────────────────
+
+-- Failure cases (croak, Registry unchanged):
+--   ∃ n ∈ ran names? • n ∉ ValidName
+--     ⇒ "Sub::Protected->import: 'n' is not a valid Perl identifier"
+--   postCheck ∧ ∃ n ∈ ran names? • ¬defined(caller?, n)
+--     ⇒ "Sub::Protected: caller?::n is not defined"
 ```
 
 ## Known Limitations
@@ -242,12 +312,17 @@ Message                                     Meaning
 
     The `:Protected` attribute is installed in `UNIVERSAL`, which is
     intentional (any package can use it after a single `use`), but it does
-    introduce `UNIVERSAL::Protected` into the global namespace.
+    introduce `UNIVERSAL::Protected` into the global namespace.  If another
+    module has already defined `UNIVERSAL::Protected`, loading Sub::Protected
+    warns that it is being replaced.
 
 - Thread safety
 
-    `@_pending` and `$BYPASS` are unguarded package globals.  Do not use
-    concurrent `use Sub::Protected qw(...)` calls across threads.
+    `@_pending` and `$BYPASS` are unguarded package globals.  Subs are
+    normally wrapped before any thread is started, which is safe.  Calling
+    `Sub::Protected->import(...)` or loading a package that uses
+    Sub::Protected from more than one thread at once is not supported.
+    `$BYPASS` is per-thread, as with any `our` variable under ithreads.
 
 ## Dependencies
 
@@ -255,7 +330,6 @@ Message                                     Meaning
 [Attribute::Handlers](https://metacpan.org/pod/Attribute%3A%3AHandlers) (core since 5.8),
 [B::Hooks::EndOfScope](https://metacpan.org/pod/B%3A%3AHooks%3A%3AEndOfScope),
 [Readonly](https://metacpan.org/pod/Readonly),
-[Scalar::Util](https://metacpan.org/pod/Scalar%3A%3AUtil) (core),
 [Sub::Identify](https://metacpan.org/pod/Sub%3A%3AIdentify),
 [Params::Get](https://metacpan.org/pod/Params%3A%3AGet),
 [Params::Validate::Strict](https://metacpan.org/pod/Params%3A%3AValidate%3A%3AStrict),

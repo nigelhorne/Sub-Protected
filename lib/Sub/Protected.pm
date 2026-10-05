@@ -99,8 +99,6 @@ sub UNIVERSAL::Protected : ATTR(CODE,BEGIN,CHECK) {
 # PUBLIC INTERFACE
 # -------------------------------------------------------------------
 
-=encoding utf8
-
 =head1 NAME
 
 Sub::Protected - Enforce protected subroutine access (Java/C++ semantics)
@@ -371,6 +369,8 @@ The following table lists every error or warning this method can produce.
 
 Calling a protected sub from outside its package or subclasses croaks
 with the message shown in L</Error message format>.
+
+=encoding utf8
 
 =head3 FORMAL SPECIFICATION
 
