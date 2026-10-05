@@ -581,7 +581,12 @@ for my $case (
 		is $after->{eval}, $config{eval_sentinel}, '$@ unchanged';
 		is $after->{errno}, $config{errno_sentinel}, '$! unchanged';
 		is $after->{topic}, $config{topic_sentinel}, '$_ unchanged';
-		ok $after->{alarm} > 0 && $after->{alarm} <= $ALARM_SECS, 'pending alarm left running';
+		SKIP: {
+			# Windows emulates alarm(), and its alarm() always returns 0
+			# rather than the seconds left, so the timer cannot be read back
+			skip 'alarm() does not report the time left on Windows', 1 if $^O eq 'MSWin32';
+			ok $after->{alarm} > 0 && $after->{alarm} <= $ALARM_SECS, 'pending alarm left running';
+		}
 	};
 }
 
