@@ -1,5 +1,19 @@
 Revision history for Sub-Protected
 
+0.03
+	[ Bug Fixes ]
+	- Subs were left unprotected when Sub::Protected and the package using
+	  it were loaded at run time (require, plugin loader, string eval), and
+	  Perl warned "Too late to run CHECK block".  Both the :Protected
+	  attribute and the declarative form are now wrapped after CHECK
+	  (needs Perl 5.14 or later)
+
+	[ Testing ]
+	- Added t/runtime_load.t
+
+	[ Dependencies ]
+	- Added B::Hooks::EndOfScope and Sub::Identify
+
 0.02	Tue Jun  9 08:56:25 EDT 2026
 	[ Enhancements ]
 	- Added test dashboard

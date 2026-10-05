@@ -17,5 +17,6 @@ t/extended_tests.t
 t/function.t
 t/integration.t
 t/locales.t
+t/runtime_load.t
 t/subclass.t
 t/unit.t

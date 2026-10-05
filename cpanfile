@@ -3,11 +3,13 @@
 requires 'perl', '5.008';
 
 requires 'Attribute::Handlers';
+requires 'B::Hooks::EndOfScope';
 requires 'Carp';
 requires 'Params::Get';
 requires 'Params::Validate::Strict';
 requires 'Readonly';
 requires 'Return::Set';
+requires 'Sub::Identify';
 
 on 'test' => sub {
 	requires 'IPC::System::Simple';

@@ -1,109 +1,3 @@
-# TODO: protect subs when this module is loaded after CHECK (run-time require)
-# ===========================================================================
-#
-# Problem
-# -------
-# When this module and the package that uses it are loaded at run time
-# (require, a plugin loader, string eval), the protected subs are NOT
-# wrapped: anyone can call them.  Perl also warns:
-#	Too late to run CHECK block at lib/Sub/Protected.pm line NNN.
-# This contradicts the POD, which says that after CHECK "wrapping occurs
-# immediately".  Both forms are affected: the :Protected attribute and
-# "use Sub::Protected qw(...)".  Loading at compile time (use, or require
-# inside BEGIN) works correctly and is unaffected by the changes below.
-#
-# Reproduce (Foo.pm declares "sub _x :Protected { 1 }" and a public new()):
-#	perl -Ilib -e 'require Foo; print eval { Foo->new->_x; 1 } ? "LEAK\n" : "ok\n"'
-# prints LEAK.
-#
-# Cause
-# -----
-# 1. "my $_post_check = 0;" is only set to 1 by this module's own CHECK
-#    block.  If this module is first loaded after CHECK, that block never
-#    runs, so import() queues every sub on @_pending forever.
-# 2. The attribute handler is ATTR(CODE,CHECK).  Attribute::Handlers runs
-#    CHECK-phase handlers from a CHECK block, which also never runs after
-#    CHECK, so the handler is never called.
-#
-# Proposed change
-# ---------------
-# a. Start the flag from the global phase:
-#	my $_post_check = (defined(${^GLOBAL_PHASE}) && ${^GLOBAL_PHASE} ne 'START') ? 1 : 0;
-#    ${^GLOBAL_PHASE} exists from Perl 5.14.  On older Perls it is undef,
-#    so the flag starts at 0 and behaviour is exactly as today.
-#
-# b. Wrap the CHECK block so loading after CHECK does not warn:
-#	{
-#		no warnings 'void';	# "Too late to run CHECK block"
-#		CHECK { ... unchanged ... }
-#	}
-#
-# c. Also run the attribute handler in the BEGIN phase.  Before CHECK, do
-#    nothing (the CHECK-phase call does the work, as today).  After CHECK,
-#    the sub is still being compiled and may have no name yet, so defer
-#    the wrapping to the end of the file being compiled:
-#
-#	sub UNIVERSAL::Protected : ATTR(CODE,BEGIN,CHECK) {
-#		my ($package, $symbol, $referent, $attr, $data, $phase) = @_;
-#		if($phase eq 'BEGIN') {
-#			return unless($_post_check);	# CHECK will do it
-#			require B::Hooks::EndOfScope;
-#			require Sub::Identify;
-#			B::Hooks::EndOfScope::on_scope_end(sub {
-#				my ($pkg, $name) = Sub::Identify::get_code_info($referent);
-#				no strict 'refs';
-#				UNIVERSAL::Protected($pkg, \*{"${pkg}::$name"}, $referent, $attr, $data, 'CHECK');
-#			});
-#			return;
-#		}
-#		... the existing CHECK-phase body, unchanged ...
-#	}
-#
-#    on_scope_end() works here because a BEGIN-phase handler runs while the
-#    user's file is being compiled.  (The existing comment that it "does
-#    NOT work from a CHECK-phase callback" is about the CHECK phase only.)
-#
-#    Dependencies: add B::Hooks::EndOfScope and Sub::Identify to
-#    Makefile.PL's PREREQ_PM (neither is used by this module today).
-#
-# Verified
-# --------
-# A patched copy (changes a-c) was tested on 2026-10-01:
-#	* Protected attribute and declarative forms, loaded at run time and at
-#	  compile time: subs blocked from outside, callable from inside, no
-#	  warnings.
-#	* A subclass loaded at run time may call a protected method.
-#	* This distribution's own test suite passes unchanged.
-#
-# Tests to add
-# ------------
-#	* A test module using the attribute form, loaded with require at run
-#	  time: calls from outside croak with the usual message; calls from
-#	  inside and from a subclass work.
-#	* The same for the declarative form, with import() called at the end
-#	  of the module file, after the subs are defined.
-#	* Loading at run time emits no warnings (Test::Warnings or
-#	  $SIG{__WARN__}).
-#	* Run these in a child process (or with HARNESS_ACTIVE deleted and
-#	  $BYPASS false), since the harness bypass would hide the leak.
-#
-# POD to update
-# -------------
-#	* import(): "If CHECK has already fired ... wrapping is applied
-#	  immediately" becomes true; say that this needs Perl 5.14 (older Perls
-#	  must load the module at compile time).
-#	* Add to LIMITATIONS: on Perl < 5.14, loading at run time leaves subs
-#	  unprotected.
-#
-# Who needs this
-# --------------
-# App::Syslogd (github.com/nigelhorne/syslogd) works around both causes in
-# lib/App/Syslogd.pm: it uses the declarative form at the end of the file
-# and, at run time, calls this module's _process_one() with $BYPASS set.
-# Once a fixed version is released, that workaround can be removed and
-# App::Syslogd's Makefile.PL can require the fixed version.
-# ===========================================================================
-
 package Sub::Protected;
 
 # Minimum Perl version: 5.8 (Attribute::Handlers became core in 5.8)
@@ -152,7 +46,11 @@ my @_pending;
 
 # Set to 1 when the CHECK block fires.  Import() uses this to decide
 # whether to schedule wrapping (pre-CHECK) or wrap immediately (post-CHECK).
-my $_post_check = 0;
+# If this module is itself loaded after CHECK (run-time require, plugin
+# loader, string eval) our CHECK block never runs, so start from the global
+# phase.  ${^GLOBAL_PHASE} exists from Perl 5.14; on older Perls it is undef
+# and the flag starts at 0, so the module must be loaded at compile time.
+my $_post_check = (defined(${^GLOBAL_PHASE}) && ${^GLOBAL_PHASE} ne 'START') ? 1 : 0;
 
 # -------------------------------------------------------------------
 # ATTRIBUTE HANDLER
@@ -161,9 +59,29 @@ my $_post_check = 0;
 # Install the :Protected attribute in UNIVERSAL so every package can use it
 # the moment this module is loaded, with no per-package setup needed.
 # Attribute::Handlers calls this sub at CHECK phase for each decorated symbol.
+# It is also called at BEGIN phase: before CHECK that call does nothing (the
+# CHECK-phase call does the work), but after CHECK the CHECK-phase call never
+# happens, so the BEGIN-phase call wraps the sub instead.  The sub is still
+# being compiled at that point and may have no name yet, so the wrapping is
+# deferred to the end of the scope (normally the file) being compiled.
+# on_scope_end() works here because a BEGIN-phase handler runs while the
+# user's file is being compiled; it does NOT work from a CHECK-phase callback.
 # The unused parameters ($attr, $data) are required by the protocol.
-sub UNIVERSAL::Protected : ATTR(CODE,CHECK) {
+sub UNIVERSAL::Protected : ATTR(CODE,BEGIN,CHECK) {
 	my ($package, $symbol, $referent, $attr, $data, $phase) = @_;
+
+	if($phase eq 'BEGIN') {
+		return unless($_post_check);	# CHECK will do it
+		require B::Hooks::EndOfScope;
+		require Sub::Identify;
+		B::Hooks::EndOfScope::on_scope_end(sub {
+			my ($pkg, $name) = Sub::Identify::get_code_info($referent);
+			no strict 'refs';
+			UNIVERSAL::Protected($pkg, \*{"${pkg}::$name"}, $referent, $attr, $data, 'CHECK');
+		});
+		return;
+	}
+
 	my $sub_name = *{$symbol}{NAME};
 	no warnings 'redefine';
 	*{$symbol} = _wrap($package, $sub_name, $referent);  # function call, not method call
@@ -226,7 +144,8 @@ message.
 The C<:Protected> attribute is registered in C<UNIVERSAL> via
 L<Attribute::Handlers> when C<Sub::Protected> is loaded, so every package
 has access to it without any further C<use> or inheritance.  The sub is
-wrapped at C<CHECK> time.  This form is preferred because the protection
+wrapped at C<CHECK> time, or, if the module is loaded after C<CHECK> (Perl
+5.14 or later), at the end of the file being compiled.  This form is preferred because the protection
 declaration sits next to the definition and wrapping happens at compile time
 (making pre-wrap raw-coderef captures impossible).
 
@@ -296,10 +215,16 @@ With B<no arguments>: does nothing beyond making the C<:Protected> attribute
 globally available (which happens when the module is first loaded).
 
 With B<one or more sub names>: registers those subs in the calling
-package for wrapping at C<CHECK> time.  If the module has already passed
-C<CHECK> (e.g. loaded via runtime C<require>), wrapping occurs immediately.
+package for wrapping at C<CHECK> time.  If C<CHECK> has already fired
+(e.g. the module was loaded via runtime C<require>, a plugin loader or a
+string C<eval>), wrapping is applied immediately.
 Each named sub must be defined before C<CHECK> fires (for pre-CHECK loads)
-or before C<import> is called (for post-CHECK loads).
+or before C<import> is called (for post-CHECK loads), so a module loaded at
+run time should call C<< Sub::Protected->import(...) >> at the end of the
+file, after its subs are defined.
+
+Run-time loading needs Perl 5.14 or later.  On older Perls the module must
+be loaded at compile time (C<use>, or C<require> inside C<BEGIN>).
 
 =head3 Arguments
 
@@ -431,12 +356,17 @@ sub import {
 
 # Process all pending declarative wraps registered during import().
 # After processing, set the post_check flag so runtime imports wrap directly.
-CHECK {
-	$_post_check = 1;
+# The bare block silences "Too late to run CHECK block" when this module is
+# loaded after CHECK; $_post_check is already 1 in that case.
+{
+	no warnings 'void';	# "Too late to run CHECK block"
+	CHECK {
+		$_post_check = 1;
 
-	# Wrap every pending (package, sub) pair.
-	_process_one(@$_) for @_pending;
-	@_pending = ();
+		# Wrap every pending (package, sub) pair.
+		_process_one(@$_) for @_pending;
+		@_pending = ();
+	}
 }
 
 # -------------------------------------------------------------------
@@ -591,6 +521,13 @@ Method modifiers applied after Sub::Protected has wrapped a sub will wrap
 the wrapper.  Apply Sub::Protected last, or use the declarative form in a
 C<CHECK> block after the class is fully built.
 
+=item Run-time loading on Perl < 5.14
+
+On Perls older than 5.14, loading this module (or a package that uses it)
+at run time -- via C<require>, a plugin loader or a string C<eval> -- leaves
+the subs unprotected, because C<CHECK> has already fired.  Load it at
+compile time instead.
+
 =item UNIVERSAL namespace pollution
 
 The C<:Protected> attribute is installed in C<UNIVERSAL>, which is
@@ -608,8 +545,10 @@ concurrent C<use Sub::Protected qw(...)> calls across threads.
 
 L<Carp> (core),
 L<Attribute::Handlers> (core since 5.8),
+L<B::Hooks::EndOfScope>,
 L<Readonly>,
 L<Scalar::Util> (core),
+L<Sub::Identify>,
 L<Params::Get>,
 L<Params::Validate::Strict>,
 L<Return::Set>.
